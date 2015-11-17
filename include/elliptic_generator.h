@@ -25,6 +25,8 @@
 
 #include "elliptic_factory.h"
 
+#include <vector>
+
 namespace ptope {
 class EllipticGenerator {
 	public:
@@ -36,11 +38,26 @@ class EllipticGenerator {
 		 * Check whether there are further matrices to generate. Returns true if a
 		 * subsequent call to next() will return a valid matrix.
 		 */
-		bool hasNext();
+		bool has_next() const;
 		/**
 		 * Generates and returns the next elliptic matrix.
 		 */
 		arma::mat next();
+	private:
+		/** Size of matrices to return. */
+		const uint _size;
+		bool done_a = false;
+		bool done_b = false;
+		bool done_d = false;
+		bool done_e = true;
+		bool done_f = true;
+		bool done_h = true;
+		std::vector<uint> todo_g;
+		/**
+		 * Set up the generator to only output required matrices.
+		 */
+		void initialize();
+};
 }
 #endif
 
