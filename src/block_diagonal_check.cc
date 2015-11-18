@@ -1,5 +1,5 @@
 /*
- * parabolic_filter.h
+ * block_diagonal_check.h
  * Copyright 2015 John Lawson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "parabolic_filter.h"
+#include "block_diagonal_check.h"
 
 namespace ptope {
-bool ParabolicFilter::operator()(const arma::mat m) {
+bool BlockDiagonalCheck::operator()(const arma::mat m) {
 	_unvisited.clear();
 	_components.clear();
 	while(!_queue.empty()) {

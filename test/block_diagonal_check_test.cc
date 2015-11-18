@@ -14,23 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "parabolic_filter.h"
+#include "block_diagonal_check.h"
 
 #include <gtest/gtest.h>
 
 namespace ptope {
-TEST(ParabolicFilter, Identity2) {
+TEST(BlockDiagonalCheck, Identity2) {
 	arma::mat id(2,2);
 	id.eye();
-	ParabolicFilter filter;
+	BlockDiagonalCheck filter;
 	EXPECT_FALSE(filter(id));
 }
-TEST(ParabolicFilter, Full2) {
+TEST(BlockDiagonalCheck, Full2) {
 	arma::mat a = { { 1, 2 }, { 3, 4 } };
-	ParabolicFilter filter;
+	BlockDiagonalCheck filter;
 	EXPECT_TRUE(filter(a));
 }
-TEST(ParabolicFilter, LargeDisconnected) {
+TEST(BlockDiagonalCheck, LargeDisconnected) {
 	arma::mat b = 
 	{ { 1, 1, 1, 0, 0, 0, 0 }, 
 		{ 1, 1, 1, 0, 0, 0, 0 },
@@ -39,7 +39,7 @@ TEST(ParabolicFilter, LargeDisconnected) {
 		{ 0, 0, 0, 0, 1, 1, 0 },
 		{ 0, 0, 0, 0, 1, 1, 0 },
 		{ 0, 0, 0, 0, 0, 0, 0 } };
-	ParabolicFilter filter;
+	BlockDiagonalCheck filter;
 	EXPECT_FALSE(filter(b));
 }
 }

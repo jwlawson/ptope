@@ -1,5 +1,5 @@
 /*
- * parabolic_filter.h
+ * block_diagonal_check.h
  * Copyright 2015 John Lawson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,9 +15,8 @@
  * limitations under the License.
  */
 /**
- * Functor which checks whether a given matrix is parabolic or not. It returns
- * true if the matrix is *not* parabolic. The idea is that it filters the
- * parabolics out of a stream of given matrices.
+ * Functor which checks whether a given matrix is block diagonal or not (after
+ * some permutation). It returns true if the matrix is block diagonal.
  */
 #pragma once
 #ifndef PTOPE_PARABOLIC_FILTER_H_
@@ -27,9 +26,9 @@
 #include <queue>
 
 namespace ptope {
-class ParabolicFilter {
+class BlockDiagonalCheck {
 	public:
-		ParabolicFilter() {}
+		BlockDiagonalCheck() {}
 		bool operator()(const arma::mat m);
 	private:
 		std::vector<arma::uword> _unvisited;
