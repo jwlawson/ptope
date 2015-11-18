@@ -19,8 +19,8 @@
  * some permutation). It returns true if the matrix is block diagonal.
  */
 #pragma once
-#ifndef PTOPE_PARABOLIC_FILTER_H_
-#define PTOPE_PARABOLIC_FILTER_H_
+#ifndef PTOPE_BLOCK_DIAGONAL_CHECK_H_
+#define PTOPE_BLOCK_DIAGONAL_CHECK_H_
 
 #include <armadillo>
 #include <queue>
