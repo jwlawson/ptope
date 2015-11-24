@@ -25,6 +25,11 @@ class PolytopeCandidate {
 	public:
 		typedef arma::mat GramMatrix;
 		/**
+		 * Default constructor. No methods will work with an instance created using
+		 * this. Just here for compatability.
+		 */
+		PolytopeCandidate() : _vectors(arma::mat()), _valid(false) {}
+		/**
 		 * Create a polytope candidate from an initial Gram matrix. The matrix can
 		 * then be used to construct a set of vectors which form the normal vectors
 		 * of the hyperplanes of the polytope. From there a change of corrdinates to
@@ -52,11 +57,18 @@ class PolytopeCandidate {
 		signature() const;
 		/** Check whether the polytope is valid. */
 		bool
-		valid() {
+		valid() const {
 			return _valid;
 		}
 		std::size_t
 		real_dimension() const;
+		/**
+		 * Return a reference to the polytope's gram matrix.
+		 */
+		const arma::mat &
+		gram() const {
+			return _gram;
+		}
 		/**
 		 * Print matrix and vectors to output stream.
 		 */
@@ -85,8 +97,6 @@ class PolytopeCandidate {
 		bool _hyperbolic;
 		/** Check whether the polytope is valid */
 		bool _valid;
-		/** Private default constructor to allow creation of Invalid. Don't use! */
-		PolytopeCandidate() : _vectors(arma::mat()), _valid(false) {}
 };
 }
 #endif

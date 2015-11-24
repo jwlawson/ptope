@@ -20,7 +20,7 @@ namespace ptope {
 namespace {
 constexpr double error = 1e-10;
 }
-bool ParabolicCheck::operator()(const arma::mat m) {
+bool ParabolicCheck::operator()(const arma::mat & m) {
 	if(std::abs(arma::det(m)) > error) {
 		return false;
 	}
@@ -32,5 +32,8 @@ bool ParabolicCheck::operator()(const arma::mat m) {
 		}
 	}
 	return is_non_negative;
+}
+bool ParabolicCheck::operator()(const PolytopeCandidate & p) {
+	return operator()(p.gram());
 }
 }

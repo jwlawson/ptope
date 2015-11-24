@@ -21,13 +21,17 @@ namespace {
 std::vector<double> angles_to_prods(const std::vector<uint> & angles) {
 	std::vector<double> result(angles.size());
 	for(std::size_t i = 0, max = angles.size(); i < max; ++i) {
-		result[i] = -std::cos(arma::datum::pi/angles[i]);
+		if(angles[i] == 2) {
+			result[i] = 0;
+		} else {
+			result[i] = -std::cos(arma::datum::pi/angles[i]);
+		}
 	}
 	return result;
 }
 }
 const std::vector<double>
-PolytopeExtender::__default_inner = angles_to_prods({ 2, 3, 4, 5, 8});
+PolytopeExtender::__default_inner = angles_to_prods({ 2, 3, 4, 5, 8 });
 PolytopeExtender::PolytopeExtender(const PolytopeCandidate & initial_polytope)
 	:	_initial(initial_polytope),
 		_inner_products(__default_inner),

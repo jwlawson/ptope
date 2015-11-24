@@ -48,11 +48,11 @@ class PolytopeExtender {
 		PolytopeCandidate
 		next();
 	private:
-		const PolytopeCandidate _initial;
-		const std::vector<double> _inner_products;
+		PolytopeCandidate _initial;
+		std::vector<double> _inner_products;
 		arma::vec _extend_by;
 		std::vector<std::size_t> _progress;
-		const std::size_t _progress_max;
+		std::size_t _progress_max;
 		bool _has_next;
 
 		void increment_progress();

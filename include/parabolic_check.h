@@ -25,7 +25,7 @@
 #ifndef PTOPE_PARABOLIC_CHECK_H_
 #define PTOPE_PARABOLIC_CHECK_H_
 
-#include <armadillo>
+#include "polytope_candidate.h"
 
 namespace ptope {
 class ParabolicCheck {
@@ -35,7 +35,8 @@ class ParabolicCheck {
 		 * Check whether the given symmetric matrix is parabolic.
 		 * Returns true if it is parabolic.
 		 */
-		bool operator()(const arma::mat m);
+		bool operator()(const arma::mat & m);
+		bool operator()(const PolytopeCandidate & p);
 	private:
 		arma::vec evalues;
 };
