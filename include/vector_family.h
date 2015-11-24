@@ -85,8 +85,24 @@ class VectorFamily {
 		underlying_matrix() const {
 			return _vectors;
 		}
+		/**
+		 * Get the first columns which make up a basis of the vector family.
+		 *
+		 * In fact you get one fewer vector than a basis, as the requirement that
+		 * the vectors be unit gives the final coordinate.
+		 */
 		const arma::mat
 		first_basis_cols() const;
+		/**
+		 * Save the vector family to the stream.
+		 */
+		void
+		save(std::ostream & os, arma::file_type type);
+		/**
+		 * Load a saved vector family from stream.
+		 */
+		void
+		load(std::istream & os, arma::file_type type);
 	private:
 		arma::mat _vectors;
 };

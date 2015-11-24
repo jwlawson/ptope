@@ -54,6 +54,14 @@ VectorFamily::first_basis_cols() const  {
 	arma::uword size = dimension() - 1;
 	return _vectors.head_cols(size);
 }
+void
+VectorFamily::save(std::ostream & os, arma::file_type type) {
+	_vectors.save(os, type);
+}
+void
+VectorFamily::load(std::istream & is, arma::file_type type) {
+	_vectors.load(is, type);
+}
 }
 
 

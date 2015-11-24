@@ -70,6 +70,16 @@ class PolytopeCandidate {
 			return _gram;
 		}
 		/**
+		 * Save the polytope candidate to stream.
+		 */
+		void
+		save(std::ostream & os);
+		/**
+		 * Read the polytope from stream.
+		 */
+		void
+		load(std::istream & is);
+		/**
 		 * Print matrix and vectors to output stream.
 		 */
 		friend

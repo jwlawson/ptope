@@ -24,7 +24,10 @@ bool ParabolicCheck::operator()(const arma::mat & m) {
 	if(std::abs(arma::det(m)) > error) {
 		return false;
 	}
-	arma::eig_sym(evalues, m);
+	bool got_vals = arma::eig_sym(evalues, m);
+	if(!got_vals) {
+		std::cerr << "Failed to find eigenvalues: " << std::endl << m << std::endl;
+	}
 	bool is_non_negative = true;
 	for(arma::uword i = 0; is_non_negative && i < m.n_rows; ++i) {
 		if (evalues(i) < 0) {

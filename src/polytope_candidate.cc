@@ -26,7 +26,7 @@ double mink_inner_prod(const arma::vec & a, const arma::vec & b) {
 		sq += a(i) * b(i);
 	}
 	sq -= a(max) * b(max);
-	return std::sqrt(sq);
+	return sq;
 }
 double mink_inner_prod(const arma::vec & a) {
 	double sq = 0;
@@ -35,7 +35,7 @@ double mink_inner_prod(const arma::vec & a) {
 		sq += a(i) * a(i);
 	}
 	sq -= a(max) * a(max);
-	return std::sqrt(sq);
+	return sq;
 }
 double eucl_sq_norm(const arma::vec & a) {
 	double sq = 0;
@@ -133,7 +133,21 @@ PolytopeCandidate::real_dimension() const {
 		return static_cast<std::size_t>(_vectors.dimension());
 	}
 }
-
+void
+PolytopeCandidate::save(std::ostream & os) {
+	_gram.save(os, arma::file_type::arma_binary);
+	_vectors.save(os, arma::file_type::arma_binary);
+	os << _hyperbolic;
+	os << _valid;
+}
+void
+PolytopeCandidate::load(std::istream & is) {
+	_gram.load(is, arma::file_type::arma_binary);
+	_vectors.load(is, arma::file_type::arma_binary);
+	_basis_vecs_trans = _vectors.first_basis_cols().t();
+	is >> _hyperbolic;
+	is >> _valid;
+}
 std::ostream &
 operator<<(std::ostream & os, const PolytopeCandidate & poly) {
 	poly._gram.print(os, "Gram:");
