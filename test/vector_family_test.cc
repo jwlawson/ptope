@@ -64,4 +64,27 @@ TEST(VectorFamily, UnsafeGetUnsafe) {
 	arma::vec v1 = v.get(0);
 	EXPECT_DOUBLE_EQ(5, v1(0));
 }
+TEST(VectorFamily, Size) {
+	VectorFamily v({ { 1, 0 }, { 0, 1 } });
+	EXPECT_EQ((arma::uword) 2, v.size());
+	v.add_vector({ 1, 1 });
+	EXPECT_EQ((arma::uword) 3, v.size());
+}
+TEST(VectorFamily, Dimension) {
+	VectorFamily v({ { 1, 0 }, { 0, 1 } });
+	EXPECT_EQ((arma::uword) 2, v.dimension());
+	v.add_vector({ 1, 1 });
+	EXPECT_EQ((arma::uword) 2, v.dimension());
+}
+TEST(VectorFamily, Swap) {
+	VectorFamily v({ { 1, 0 }, { 0, 1 } });
+	v.add_vector({ 2, 2 });
+	v.swap(0,1);
+	arma::vec a = v.get(0);
+	EXPECT_DOUBLE_EQ(0, a(0));
+	EXPECT_DOUBLE_EQ(1, a(1));
+	arma::vec c = v.get(2);
+	EXPECT_DOUBLE_EQ(2, c(0));
+	EXPECT_DOUBLE_EQ(2, c(1));
+}
 }
