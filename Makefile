@@ -4,7 +4,7 @@ MINOR = 1
 VERSION = $(MAJOR).$(MINOR)
 
 ifeq ($(CXX),g++)
-CXXFLAGS = -Wall -march=native
+CXXFLAGS = -Wall -Wextra -march=native
 OPT = -O3 -g
 else
 CXXFLAGS = -Wall -std=c++11 -xHOST
@@ -22,7 +22,7 @@ ifeq ($(uname_O),Cygwin)
 	CXXFLAGS += -std=gnu++11 -DCYGWIN_STOI
 endif
 ifeq ($(uname_S),Linux)
-	CXXFLAGS += -std=gnu++11 -fPIC
+	CXXFLAGS += -std=c++11 -fPIC
 endif
 
 LIB = lib$(NAME).so.$(VERSION)
