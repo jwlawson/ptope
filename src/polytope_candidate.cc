@@ -62,7 +62,7 @@ PolytopeCandidate::PolytopeCandidate(GramMatrix && matrix)
 		_valid(true) {}
 
 PolytopeCandidate
-PolytopeCandidate::extend_by_inner_products(const arma::vec & inner_vector) {
+PolytopeCandidate::extend_by_inner_products(const arma::vec & inner_vector) const {
 	arma::vec new_vec = arma::solve(_basis_vecs_trans, inner_vector);
 	const double e_norm = eucl_sq_norm(new_vec);
 	if(e_norm < 1) {
@@ -125,6 +125,15 @@ PolytopeCandidate::signature() const {
 	}
 	return result;
 }
+std::size_t
+PolytopeCandidate::real_dimension() const {
+	if(_hyperbolic) {
+		return static_cast<std::size_t>(_vectors.dimension() - 1);
+	} else {
+		return static_cast<std::size_t>(_vectors.dimension());
+	}
+}
+
 std::ostream &
 operator<<(std::ostream & os, const PolytopeCandidate & poly) {
 	poly._gram.print(os, "Gram:");

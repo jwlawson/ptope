@@ -37,7 +37,7 @@ class PolytopeCandidate {
 		 * polytope to include the new hyperplane defined by this vector.
 		 */
 		PolytopeCandidate
-		extend_by_inner_products(const arma::vec & new_vector);
+		extend_by_inner_products(const arma::vec & new_vector) const;
 		/**
 		 * Change the order of the vectors, so that a new basis consisting of those
 		 * vectors specified by the given vector is used. This then constructs a new
@@ -55,6 +55,8 @@ class PolytopeCandidate {
 		valid() {
 			return _valid;
 		}
+		std::size_t
+		real_dimension() const;
 		/**
 		 * Print matrix and vectors to output stream.
 		 */

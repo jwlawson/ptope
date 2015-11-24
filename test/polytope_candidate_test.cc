@@ -27,27 +27,12 @@ double min_cos_angle(uint mult) {
 TEST(PolytopeCandidate, Print) {
 	arma::mat gram = { { 1, -.5, 0 }, {-.5, 1, -.5 }, { 0, -.5, 1 } };
 	PolytopeCandidate p(gram);
-	std::cout << p << std::endl;
+	//std::cout << p << std::endl;
 
 	PolytopeCandidate ext = p.extend_by_inner_products({ min_cos_angle(3),min_cos_angle(3), min_cos_angle(4) });
-	std::cout << ext << std::endl;
+	//std::cout << ext << std::endl;
 
 	PolytopeCandidate e2 = ext.extend_by_inner_products({ min_cos_angle(3),min_cos_angle(5), min_cos_angle(4) });
-	if(!e2.valid()) {
-		std::cout << "Invalid" << std::endl;
-	} else {
-		std::cout << e2 << std::endl;
-	}
-	/*
-	PolytopeCandidate e3 = e2.extend_by_inner_products({ min_cos_angle(8), min_cos_angle(2) });
-	if(!e3.valid()) {
-		std::cout << "Invalid" << std::endl;
-	} else {
-		std::cout << e3 << std::endl;
-	}
-	*/
-
-	e2.rebase_vectors({ 0, 2, 3});
 }
 }
 

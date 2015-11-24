@@ -51,7 +51,7 @@ class VectorFamily {
 			_vectors.swap_cols(a, b);
 		}
 		/**
-		 * Get a vetor from the family. The unsafe version gets a vector which
+		 * Get a vector from the family. The unsafe version gets a vector which
 		 * points to the memory of the vectors in the vector family. Only use if you
 		 * know what you are doing.
 		 */
