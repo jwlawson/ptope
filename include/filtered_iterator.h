@@ -17,17 +17,28 @@
 #pragma once
 #ifndef PTOPE_FILTERED_ITERATOR_H_
 #define PTOPE_FILTERED_ITERATOR_H_
+
+#include <utility>
+
 namespace ptope {
 template <class It, class Output, class Filter, bool positive>
 class FilteredIterator {
 	public:
-		FilteredIterator(It && it) : _it(it) {}
+		FilteredIterator(It && it) : _it(it) {
+			get_next();
+		}
+		template <typename ... Args>
+		FilteredIterator(It && it, Args && ... args)
+			: _it(it), _filter(std::forward<Args>(args)...) {
+			get_next();
+		}
 		bool has_next() {
 			return _it.has_next();
 		}
 		Output next() {
+			Output result(_next);
 			get_next();
-			return _next;
+			return result;
 		}
 	private:
 		It _it;
