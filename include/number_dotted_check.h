@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 #pragma once
-#ifndef PTOPE_NUMBER_DOTED_CHECK_H_
-#define PTOPE_NUMBER_DOTED_CHECK_H_
+#ifndef PTOPE_NUMBER_DOTTED_CHECK_H_
+#define PTOPE_NUMBER_DOTTED_CHECK_H_
 
 #include "polytope_candidate.h"
 

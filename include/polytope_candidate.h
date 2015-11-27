@@ -70,6 +70,13 @@ class PolytopeCandidate {
 			return _gram;
 		}
 		/**
+		 * Get a reference to the polytope's vector family.
+		 */
+		const VectorFamily &
+		vector_family() const {
+			return _vectors;
+		}
+		/**
 		 * Save the polytope candidate to stream.
 		 */
 		void

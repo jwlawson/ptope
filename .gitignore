@@ -2,4 +2,5 @@ testptope
 build/
 .ycm*
 *.o
-
+*.so
+*.so.*
