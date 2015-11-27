@@ -29,7 +29,7 @@
 
 namespace ptope {
 class PolytopeExtender {
-	static const std::vector<double> __default_inner;
+	static std::vector<double> __default_inner;
 	public:
 		PolytopeExtender(const PolytopeCandidate & initial_polytope);
 		PolytopeExtender(PolytopeCandidate && initial_polytope);
@@ -47,6 +47,11 @@ class PolytopeExtender {
 		 */
 		PolytopeCandidate
 		next();
+		/**
+		 * Set the default angles used to extend the polytopes.
+		 */
+		static void
+		set_default_angles(const std::vector<uint> & angles);
 	private:
 		PolytopeCandidate _initial;
 		std::vector<double> _inner_products;

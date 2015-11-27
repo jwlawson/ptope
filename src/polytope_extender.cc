@@ -30,7 +30,7 @@ std::vector<double> angles_to_prods(const std::vector<uint> & angles) {
 	return result;
 }
 }
-const std::vector<double>
+std::vector<double>
 PolytopeExtender::__default_inner = angles_to_prods({ 2, 3, 4, 5, 8 });
 PolytopeExtender::PolytopeExtender(const PolytopeCandidate & initial_polytope)
 	:	_initial(initial_polytope),
@@ -80,6 +80,10 @@ PolytopeExtender::next(){
 	PolytopeCandidate result = _initial.extend_by_inner_products(_extend_by);	
 	increment_progress();
 	return std::move(result);
+}
+void
+PolytopeExtender::set_default_angles(const std::vector<uint> & angles) {
+	__default_inner = angles_to_prods(angles);
 }
 void
 PolytopeExtender::increment_progress() {
