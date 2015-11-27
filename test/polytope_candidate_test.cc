@@ -21,27 +21,68 @@
 
 namespace ptope {
 namespace {
+constexpr double error = 1e-15;
 double min_cos_angle(uint mult) {
 	return -std::cos(arma::datum::pi/mult);
 }
 }
-TEST(PolytopeCandidate, Print) {
-	arma::mat gram = { { 1, -.5, 0 }, {-.5, 1, -.5 }, { 0, -.5, 1 } };
-	PolytopeCandidate p(gram);
-	//std::cout << p << std::endl;
-
-	PolytopeCandidate ext = p.extend_by_inner_products({ min_cos_angle(3),min_cos_angle(3), min_cos_angle(4) });
-	//std::cout << ext << std::endl;
-
-	PolytopeCandidate e2 = ext.extend_by_inner_products({ min_cos_angle(3),min_cos_angle(5), min_cos_angle(4) });
+TEST(PolytopeCandidate, FirstExtend) {
+	PolytopeCandidate p({ { 1, -.5 }, { -.5, 1 } });
+	auto q = p.extend_by_inner_products({ min_cos_angle(4), min_cos_angle(3) });
+	ASSERT_TRUE(q.valid());
+	arma::mat exp = 
+	{ { 1, -.5, min_cos_angle(4) },
+		{ -.5, 1, min_cos_angle(3) },
+		{ min_cos_angle(4), min_cos_angle(3), 1 } };
+	arma::mat diff = q.gram() - exp;
+	for(const double & val : diff) {
+		EXPECT_DOUBLE_EQ(0.0, val);
+	}
+}
+TEST(PolytopeCandidate, EuclideanInvalid) {
+	PolytopeCandidate p({ { 1, -.5 }, { -.5, 1 } });
+	auto q = p.extend_by_inner_products({ -.5, -.5 });
+	EXPECT_FALSE(q.valid());
+}
+TEST(PolytopeCandidate, EsselmannExample) {
+	PolytopeCandidate p({ { 1, -.5, 0, 0 }, 
+												{ -.5, 1, min_cos_angle(4), 0 }, 
+												{ 0, min_cos_angle(4), 1, -.5 }, 
+												{ 0, 0, -.5, 1 } });
+	auto q = p.extend_by_inner_products({ 0, 0, 0, min_cos_angle(8) });
+	ASSERT_TRUE(q.valid());
+	auto r = q.extend_by_inner_products({ min_cos_angle(8), 0, 0, 0 });
+	ASSERT_TRUE(r.valid());
+	arma::mat exp = 
+	{ {  1, -.5, 0, 0, 0, min_cos_angle(8) }, 
+		{ -.5, 1, min_cos_angle(4), 0, 0, 0 }, 
+		{ 0, min_cos_angle(4), 1, -.5, 0, 0 }, 
+		{ 0, 0, -.5, 1, min_cos_angle(8), 0 },
+		{ 0, 0, 0, min_cos_angle(8), 1, 0 },
+		{ min_cos_angle(8), 0, 0, 0, 0, 1 } };
+	arma::mat diff = r.gram() - exp;
+	for(const double & val : diff) {
+		EXPECT_NEAR(0.0, val, error);
+	}
+}
+TEST(PolytopeCandidate, LannerExample) {
+	PolytopeCandidate p({ { 1, -.5, 0 }, { -.5, 1, min_cos_angle(5) },
+			{ 0, min_cos_angle(5), 1 }});
+		auto q = p.extend_by_inner_products({ 0, 0, -.5});
+		ASSERT_TRUE(q.valid());
+		arma::mat exp = { { 1, -.5, 0, 0 }, { -.5, 1, min_cos_angle(5), 0},
+			{ 0, min_cos_angle(5), 1, -.5 }, { 0, 0, -.5, 1} };
+	arma::mat diff = q.gram() - exp;
+	for(const double & val : diff) {
+		EXPECT_NEAR(0.0, val, error);
+	}
 }
 TEST(PolytopeCandidate, StrangeNaN) {
 	arma::mat a6 = elliptic_factory::type_a(6);
 	PolytopeCandidate p(a6);
 	PolytopeCandidate q = p.extend_by_inner_products({ min_cos_angle(5), 0, 0, 0, 0, 0 } );
-	std::cout << q.signature().first << " " << q.signature().second << std::endl;
 	PolytopeCandidate r = q.extend_by_inner_products({ 0, 0, 0, 0, min_cos_angle(4), min_cos_angle(3) });
-	std::cout << r << std::endl;
+	EXPECT_FALSE(q.gram().has_nan());
 }
 TEST(PolytopeCandidate, SaveLoad) {
 	PolytopeCandidate p({ { 1, 0 }, { 0, 1 } });
@@ -57,6 +98,7 @@ TEST(PolytopeCandidate, SaveLoad) {
 	for(arma::uword i = 0; i < p_g.size(); ++i) {
 		EXPECT_DOUBLE_EQ(p_g(i), q_g(i));
 	}
+	EXPECT_EQ(p.valid(), q.valid());
 }
 }
 

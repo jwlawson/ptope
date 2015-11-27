@@ -18,7 +18,7 @@
 
 namespace ptope {
 namespace {
-constexpr double error = 1e-15;
+constexpr double error = 1e-14;
 double mink_inner_prod(const arma::vec & a, const arma::vec & b) {
 	double sq = 0;
 	arma::uword max = a.size() - 1;
@@ -65,7 +65,7 @@ PolytopeCandidate
 PolytopeCandidate::extend_by_inner_products(const arma::vec & inner_vector) const {
 	arma::vec new_vec = arma::solve(_basis_vecs_trans, inner_vector);
 	const double e_norm = eucl_sq_norm(new_vec);
-	if(e_norm < 1) {
+	if(e_norm - 1.0 < error) {
 		/* Invalid set of angles. */
 		return PolytopeCandidate::InValid;
 	}
@@ -77,12 +77,12 @@ PolytopeCandidate::extend_by_inner_products(const arma::vec & inner_vector) cons
 	if(!_hyperbolic) {
 		const arma::uword last_entry = new_vec.size();
 		new_vec.insert_rows(last_entry, 1, false);
-		new_vec(last_entry) = std::sqrt(e_norm - 1);
+		new_vec(last_entry) = std::sqrt(e_norm - 1.0);
 		result._vectors.add_first_hyperbolic_vector(new_vec);
 		result._basis_vecs_trans = result._vectors.first_basis_cols().t();
 		result._hyperbolic = true;
 	} else {
-		new_vec(new_vec.size()-1) = std::sqrt(e_norm - 1);
+		new_vec(new_vec.size()-1) = std::sqrt(e_norm - 1.0);
 		result._vectors.add_vector(new_vec);
 	}
 	/* Add new inner products to the gram matrix */
@@ -137,7 +137,7 @@ void
 PolytopeCandidate::save(std::ostream & os) {
 	_gram.save(os, arma::file_type::arma_binary);
 	_vectors.save(os, arma::file_type::arma_binary);
-	os << _hyperbolic;
+	os << _hyperbolic << " ";
 	os << _valid;
 }
 void
