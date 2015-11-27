@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 #include "polytope_check.h"
+#include "elliptic_factory.h"
 
 #include <gtest/gtest.h>
 
@@ -47,6 +48,32 @@ TEST(PolytopeCheck, Counter) {
 	auto q = p.extend_by_inner_products({ -.5, -.5, -.5});
 	PolytopeCheck chk;
 	EXPECT_FALSE(chk(q));
+}
+TEST(PolytopeCheck, TumarkinExample) {
+	PolytopeCandidate p( { { 1, min_cos_angle(4), 0, 0 },
+			{ min_cos_angle(4), 1, -.5, 0 },
+			{0, -.5, 1, -.5 },
+			{ 0, 0, -.5, 1 } });
+	auto q = p.extend_by_inner_products({ 0, min_cos_angle(8), 0, 0 });
+	auto r = q.extend_by_inner_products({ 0, 0, 0, min_cos_angle(8) });
+	r.rebase_vectors({ 1, 2, 3, 4 });
+	auto s = r.extend_by_inner_products({ 0, 0, min_cos_angle(4), 0 });
+	ASSERT_TRUE(s.valid());
+	PolytopeCheck chk;
+	EXPECT_TRUE(chk(s));
+}
+TEST(PolytopeCheck, Biggest) {
+	PolytopeCandidate p(elliptic_factory::type_e(8));
+	auto q = p.extend_by_inner_products({ min_cos_angle(5), 0, 0, 0, 0, 0, 0, 0 });
+	auto r = q.extend_by_inner_products({ 0, 0, 0, 0, 0, 0, 0, min_cos_angle(5) });
+	r.rebase_vectors({ 0, 1, 2, 4, 5, 6, 7, 8 });
+	auto s = r.extend_by_inner_products({ 0, 0, 0, 0, -.5, 0, 0, 0 });
+	ASSERT_TRUE(s.valid());
+	PolytopeCheck chk;
+	EXPECT_TRUE(chk(s));
+
+	s.rebase_vectors({ 0, 1, 2, 8, 3, 4, 5, 6});
+	EXPECT_TRUE(chk(s));
 }
 }
 

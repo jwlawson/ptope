@@ -50,6 +50,8 @@ class PolytopeCandidate {
 		 */
 		void
 		rebase_vectors(arma::uvec vec_indices);
+		void
+		recompute_gram();
 		/**
 		 * Get the signature of the polytope's gram matrix.
 		 */

@@ -36,7 +36,7 @@ TEST(PolytopeCandidate, FirstExtend) {
 		{ min_cos_angle(4), min_cos_angle(3), 1 } };
 	arma::mat diff = q.gram() - exp;
 	for(const double & val : diff) {
-		EXPECT_DOUBLE_EQ(0.0, val);
+		EXPECT_NEAR(0.0, val, error);
 	}
 }
 TEST(PolytopeCandidate, EuclideanInvalid) {
