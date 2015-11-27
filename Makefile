@@ -12,6 +12,7 @@ OPT += -O3 -ipo -no-prec-div
 B_OPT += $(OPT)
 AR = xiar
 endif
+CXXFLAGS += -DARMA_DONT_USE_WRAPPER
 
 uname_S := $(shell sh -c 'uname -s 2>/dev/null || echo not')
 uname_M := $(shell sh -c 'uname -m 2>/dev/null || echo not')
@@ -49,19 +50,16 @@ INC_DIR = $(BASE_DIR)/include
 PREFIX = $(HOME)
 
 # define any directories containing header files other than /usr/include
-# -I/home/newhall/include
 INCLUDES = -I$(HOME)/include -I$(BASE_DIR)/include \
            -I$(BASE_DIR)/lib/include
 
 # define library paths in addition to /usr/lib
-#   if I wanted to include libraries not in /usr/lib I'd specify
-#   their path using -Lpath, something like: -L/home/newhall/lib
 LFLAGS = -L$(HOME)/lib -L$(BASE_DIR)/lib
 
 # define any libraries to link into executable:
 #   if I want to link in libraries (libx.so or libx.a) use -lx
-LIBS = -larmadillo
-TEST_LIBS = -lgtest -lgtest_main -larmadillo -pthread
+LIBS = -lopenblas -llapack
+TEST_LIBS = -lgtest -lgtest_main -lopenblas -llapack -pthread
 
 # define the C source files
 SRCS = $(wildcard $(SRC_DIR)/*.cc)
