@@ -21,14 +21,21 @@
 #include "polytope_candidate.h"
 
 namespace ptope {
+/**
+ * Checks the number of dotted edges in the last column of the gram matrix of
+ * the polytope.
+ */
 template <int N>
 class NumberDottedCheck {
+	static constexpr double error = 1e-14;
 	public:
 		bool operator()(const PolytopeCandidate & p) {
 			const arma::mat & gram = p.gram();
+			const arma::uword last_col = gram.n_cols - 1;
+			const arma::vec & col = gram.unsafe_col(last_col);
 			int count;
-			for(const double & val : gram) {
-				if(val > 1.0) {
+			for(const double & val : col) {
+				if(val - 1.0 > error) {
 					++count;
 				}
 			}
