@@ -74,6 +74,12 @@ TEST(PolytopeCheck, Biggest) {
 
 	s.rebase_vectors({ 0, 1, 2, 8, 3, 4, 5, 6});
 	EXPECT_TRUE(chk(s));
+	/* This fails, however the gram matrix contains a positive entry not equal to
+	 * 1, so is not a valid gram matrix of a hyperbolic coxeter polytope. Note
+	 * that the signature of the gram matrix is still 8,1.
+	auto t = r.extend_by_inner_products({ 0, 0, 0, 0, min_cos_angle(4), 0, 0, 0 });
+	EXPECT_FALSE(chk(t));
+	*/
 }
 }
 
