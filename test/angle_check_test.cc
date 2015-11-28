@@ -29,19 +29,26 @@ TEST(AngleCheck, Simple2) {
 	AngleCheck chk;
 	EXPECT_TRUE(chk(a));
 
-	arma::mat b = { { -.9, 0 }, { 0, -.9 } };
+	arma::mat b = { { 1, -.9 }, { -.9, 1 } };
 	EXPECT_FALSE(chk(b));
 }
 TEST(AngleCheck, Simple3) {
-	arma::mat a = { { min_cos_angle(3), min_cos_angle(4), min_cos_angle(5) },
-		{ min_cos_angle(3), min_cos_angle(4), min_cos_angle(5) },
-		{ min_cos_angle(3), min_cos_angle(4), min_cos_angle(5) } };
+	arma::mat a = { { 1, min_cos_angle(4), min_cos_angle(3) },
+		{ min_cos_angle(4), 1, min_cos_angle(4) },
+		{ min_cos_angle(3), min_cos_angle(4), 1} };
 	AngleCheck chk;
 	EXPECT_TRUE(chk(a));
 
 	/* a(0) = -1 would return true, as only last column checked */
-	a(8) = -1;
+	/* This is like an invalid gram matrix. */
+	a(6) = 1.5;
 	EXPECT_FALSE(chk(a));
+	/* This is like an angle not in the list. */
+	a(6) = -0.9;
+	EXPECT_FALSE(chk(a));
+	/* This is like a dotted edge. */
+	a(6) = -1.9;
+	EXPECT_TRUE(chk(a));
 }
 TEST(AngleCheck, CustomAngles) {
 	AngleCheck chk({2, 3});
@@ -49,13 +56,13 @@ TEST(AngleCheck, CustomAngles) {
 	EXPECT_TRUE(chk(a));
 	a(2) = min_cos_angle(3);
 	EXPECT_TRUE(chk(a));
-	a(3) = min_cos_angle(4);
+	a(2) = min_cos_angle(4);
 	EXPECT_FALSE(chk(a));
 }
 TEST(AngleCheck, DottedEdges) {
-	arma::mat a = { { min_cos_angle(3), min_cos_angle(4), 1.5 },
-		{ min_cos_angle(3), min_cos_angle(4), min_cos_angle(5) },
-		{ min_cos_angle(3), min_cos_angle(4), min_cos_angle(5) } };
+	arma::mat a = { { 1, min_cos_angle(4), -1.5 },
+		{ min_cos_angle(3), 1, min_cos_angle(5) },
+		{ min_cos_angle(3), min_cos_angle(4), 1} };
 	AngleCheck chk;
 	EXPECT_TRUE(chk(a));
 }

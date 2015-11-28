@@ -18,9 +18,9 @@
 
 namespace ptope {
 namespace {
-constexpr double error = 1e-10;
+constexpr double error = 1e-14;
 std::vector<double> angles_to_prods(const std::vector<uint> & angles) {
-	std::vector<double> result(angles.size() + 1);
+	std::vector<double> result(angles.size());
 	for(std::size_t i = 0, max = angles.size(); i < max; ++i) {
 		if(angles[i] == 2) {
 			result[i] = 0;
@@ -28,8 +28,6 @@ std::vector<double> angles_to_prods(const std::vector<uint> & angles) {
 			result[i] = -std::cos(arma::datum::pi/angles[i]);
 		}
 	}
-	/* Always want an entry 1 to be valid. */
-	result[angles.size()] = 1;
 	return result;
 }
 }
@@ -49,17 +47,23 @@ AngleCheck::operator()(const PolytopeCandidate & p) {
 }
 bool
 AngleCheck::operator()(const arma::mat & m) {
+	bool result = true;
 	const arma::uword last_col_ind = m.n_cols - 1;
 	const arma::vec & last_col = m.unsafe_col(last_col_ind);
-	for(const double & val : last_col) {
+	for(arma::uword i = 0; result && i < last_col_ind; ++i) {
+		const double & val = last_col(i);
+		if(val < (-1.0 + error) ) {
+			continue;
+		}
+		/* No entries apart form diagonals should be greater than 0 */
 		/* Uses lambda to check double values up to error */
-		if( val < 1.0 && std::find_if(_values.begin(), _values.end(),
+		if(val > error || std::find_if(_values.begin(), _values.end(),
 					[val](const double & b){return std::abs(b - val) < error; } )
 				== _values.end()) {
 			/* Value not found */
-			return false;
+			result = false;
 		}
 	}
-	return true;
+	return result;
 }
 }
