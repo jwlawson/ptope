@@ -162,15 +162,26 @@ PolytopeCheck::vertex_unvisited(const arma::uvec & vertex) const {
 			for(arma::uword val : diff){if(val != 0) return false;} return true;})
 		== _visited_vertices.end();
 }
+/*
+ * A matrix is positive definite iff all its eigen values are positive. However
+ * finding the eigenvalues of a matrix is computationally hard. Equivalently
+ * there are two other definitions which help:
+ *
+ *  -Sylvesters criterion: A matrix is positive definite iff all determinants of
+ *    leading minors are positive. This could be checked with Gaussian
+ *    elimination to get the matrix in upper triangular form (using BLAS/LAPACK
+ *    LU decomposition) so the determinants can be read off the diagonal entries.
+ *
+ *  -Cholesky decomp: A matrix is positive definite iff it has a Cholesky
+ *  	decomposition. This can easily be checked by trying to compute a Cholesky
+ *  	decomp (using BLAS/LAPACK) and seeing if it successful.
+ */
 bool
 PolytopeCheck::is_elliptic(const arma::mat & mat) const {
-	if(arma::det(mat) <= 0) return false;
-	arma::vec evalues(mat.n_cols);
-	arma::eig_sym(evalues, mat);
-	for(const double & val : evalues) {
-		if(val < -error) return false;
-	}
-	return true;
+	if(arma::det(mat) <= -error) return false;
+	arma::mat chol(mat.n_cols, mat.n_cols);
+	bool success = arma::chol(chol, mat);
+	return success;
 }
 }
 
