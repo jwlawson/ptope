@@ -50,6 +50,15 @@ class PolytopeCandidate {
 		 */
 		void
 		rebase_vectors(arma::uvec vec_indices);
+		/**
+		 * Return a copy of the polytope with vectors at indices a and b swapped.
+		 */
+		PolytopeCandidate
+		swap_rebase(const arma::uword & a, const arma::uword & b) const;
+		/**
+		 * Recomputes the gram matrix of the polytope. This should not be needed and
+		 * should not make any difference to the polytope.
+		 */
 		void
 		recompute_gram();
 		/**

@@ -1,5 +1,5 @@
 /*
- * polytope_candidate.cc
+ * polytope_candidate.h
  * Copyright 2015 John Lawson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -136,6 +136,17 @@ PolytopeCandidate::rebase_vectors(arma::uvec vec_indices) {
 	}
 	_basis_vecs_trans = _vectors.first_basis_cols().t();
 	_basis_vecs_trans.unsafe_col(real_dimension()) *= -1;
+}
+PolytopeCandidate
+PolytopeCandidate::swap_rebase(const arma::uword & a,
+		const arma::uword & b) const {
+	PolytopeCandidate result(*this);
+	result._gram.swap_cols(a, b);
+	result._gram.swap_rows(a, b);
+	result._vectors.swap(a, b);
+	result._basis_vecs_trans = _vectors.first_basis_cols().t();
+	result._basis_vecs_trans.unsafe_col(real_dimension()) *= -1;
+	return result;
 }
 void
 PolytopeCandidate::recompute_gram() {

@@ -18,9 +18,14 @@
 #ifndef PTOPE_FILTERED_ITERATOR_H_
 #define PTOPE_FILTERED_ITERATOR_H_
 
+#include <ostream>
 #include <utility>
 
 namespace ptope {
+/**
+ * Filters the output of the given iterator.
+ * Only those outputs where Filter(output) == positive are outputted.
+ */
 template <class It, class Output, class Filter, bool positive>
 class FilteredIterator {
 	public:
@@ -51,6 +56,47 @@ class FilteredIterator {
 			}
 			_next = _it.next();
 			while(_filter(_next) != positive && _it.has_next()) {
+				_next = _it.next();
+			}
+		}
+};
+/**
+ * Filters the output of the provided iterator and prints any filtered outputs
+ * to the ostream.
+ */
+template <class It, class Output, class Filter, bool positive>
+class FilteredPrintIterator {
+	public:
+		FilteredPrintIterator(It && it, std::ostream & os)
+			: _it(it), _os(os) {
+			get_next();
+		}
+		template <typename ... Args>
+		FilteredPrintIterator(It && it, std::ostream & os, Args && ... args)
+			: _it(it), _os(os), _filter(std::forward<Args>(args)...) {
+			get_next();
+		}
+		bool has_next() {
+			return _it.has_next();
+		}
+		Output next() {
+			Output result(_next);
+			get_next();
+			return result;
+		}
+	private:
+		It _it;
+		Output _next;
+		std::ostream & _os;
+		Filter _filter;
+
+		void get_next() {
+			if(!_it.has_next()) {
+				return;
+			}
+			_next = _it.next();
+			while(_filter(_next) != positive && _it.has_next()) {
+				_os << _next << _os.widen('\n');
 				_next = _it.next();
 			}
 		}
