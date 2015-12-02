@@ -53,11 +53,16 @@ bool
 PolytopeCheck::operator()(const PolytopeCandidate & p) {
 	_visited_vertices.clear();
 	while(!_edge_queue.empty()) _edge_queue.pop();
+	_unused_vectors.clear();
+	for(arma::uword i = 0; i < p.gram().n_cols; ++i) {
+		_unused_vectors.insert(i);
+	}
 
-	arma::uvec init_v = initial_vertex(p);
+	const arma::uvec init_v = initial_vertex(p);
 	_visited_vertices.push_back(init_v);
 	for(arma::uword i = 0, max = init_v.size(); i < max; ++i) {
-		_edge_queue.emplace(i, construct_edge(init_v, i));
+		_edge_queue.emplace(init_v(i), construct_edge(init_v, i));
+		_unused_vectors.erase(i);
 	}
 	while(!_edge_queue.empty()) {
 		Edge cur_edge = _edge_queue.front();
@@ -66,6 +71,7 @@ PolytopeCheck::operator()(const PolytopeCandidate & p) {
 		if(next_vert_ind == no_vertex) {
 			return false;
 		}
+		_unused_vectors.erase(next_vert_ind);
 		arma::uvec new_vert = get_vertex_from_edge(cur_edge, next_vert_ind);
 		if(vertex_unvisited(new_vert)) {
 			_visited_vertices.push_back(new_vert);
@@ -73,6 +79,10 @@ PolytopeCheck::operator()(const PolytopeCandidate & p) {
 		}
 	}
 	return true;
+}
+bool
+PolytopeCheck::used_all_vectors() const {
+	return _unused_vectors.empty();
 }
 arma::uword
 PolytopeCheck::find_edge_end(const Edge & edge,
@@ -138,7 +148,7 @@ PolytopeCheck::add_edges_from_vertex(const arma::uvec & vertex,
 	_visited_vertices.push_back(vertex);
 	for(arma::uword i = 0, max = vertex.size(); i < max; ++i) {
 		if(vertex(i) == exclude) continue;
-		_edge_queue.emplace(i, construct_edge(vertex, i));
+		_edge_queue.emplace(vertex(i), construct_edge(vertex, i));
 	}
 }
 arma::uvec

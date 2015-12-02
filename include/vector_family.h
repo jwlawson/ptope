@@ -31,6 +31,11 @@ class VectorFamily {
 		VectorFamily(const arma::mat & matrix);
 		VectorFamily(arma::mat && matrix);
 		/**
+		 * Construct a vector family from the given c-style array, for the given
+		 * number of vector_dim dimensional vectors.
+		 */
+		VectorFamily(const double * vector_ptr, int vector_dim, int no_vectors);
+		/**
 		 * Add a vector the family. The vector is assumed to be the same size as all
 		 * others in the family.
 		 */

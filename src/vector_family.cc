@@ -21,6 +21,9 @@ VectorFamily::VectorFamily(const arma::mat & mat)
 	: _vectors(mat) {}
 VectorFamily::VectorFamily(arma::mat && mat)
 	: _vectors(mat) {}
+VectorFamily::VectorFamily(const double * vector_ptr, int vector_dim,
+		int no_vectors)
+	: _vectors(vector_ptr, vector_dim, no_vectors) {}
 
 void
 VectorFamily::add_vector(const arma::mat & vec) {

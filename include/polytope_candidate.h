@@ -38,11 +38,23 @@ class PolytopeCandidate {
 		PolytopeCandidate(const GramMatrix & matrix);
 		PolytopeCandidate(GramMatrix && matrix);
 		/**
+		 * Create a polytope candidate from specified c-style arrays of specified
+		 * size. Don't use unless you know what you are doing. The arrays are
+		 * copied, and the PolytopeCandidate will not manage the pointers.
+		 */
+		PolytopeCandidate(const double * gram_ptr, int gram_size,
+				const double * vector_ptr, int vector_dim, int no_vectors);
+		/**
 		 * Given a vector of inner products with the basis vectors extend the
 		 * polytope to include the new hyperplane defined by this vector.
 		 */
 		PolytopeCandidate
 		extend_by_inner_products(const arma::vec & new_vector) const;
+		/**
+		 * Extend the polytope by a given normal vector.
+		 */
+		PolytopeCandidate
+		extend_by_vector(const arma::vec & new_vector) const;
 		/**
 		 * Change the order of the vectors, so that a new basis consisting of those
 		 * vectors specified by the given vector is used. This then constructs a new

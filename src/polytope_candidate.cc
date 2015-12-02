@@ -48,17 +48,25 @@ double eucl_sq_norm(const arma::vec & a) {
 }
 PolytopeCandidate PolytopeCandidate::InValid;
 PolytopeCandidate::PolytopeCandidate(const GramMatrix & matrix)
-	: _gram(matrix),
+: _gram(matrix),
 		_vectors(arma::chol(matrix)),
 		_basis_vecs_trans(_vectors.underlying_matrix().t()),
 		_hyperbolic(false),
 		_valid(true) {}
 
 PolytopeCandidate::PolytopeCandidate(GramMatrix && matrix)
-	: _gram(matrix),
+: _gram(matrix),
 		_vectors(arma::chol(matrix)),
 		_basis_vecs_trans(_vectors.underlying_matrix().t()),
 		_hyperbolic(false),
+		_valid(true) {}
+
+PolytopeCandidate::PolytopeCandidate(const double * gram_ptr, int gram_size,
+		const double * vector_ptr, int vector_dim, int no_vectors)
+	: _gram(gram_ptr, gram_size, gram_size),
+		_vectors(vector_ptr, vector_dim, no_vectors),
+		_basis_vecs_trans(_vectors.underlying_matrix().t()),
+		_hyperbolic(true),
 		_valid(true) {}
 
 PolytopeCandidate
@@ -101,6 +109,10 @@ PolytopeCandidate::extend_by_inner_products(const arma::vec & inner_vector) cons
 			new_vec(last_entry) = std::sqrt(e_norm - 1.0);
 		}
 	}
+	return extend_by_vector(new_vec);
+}
+PolytopeCandidate
+PolytopeCandidate::extend_by_vector(const arma::vec & new_vec) const {
 	PolytopeCandidate result(*this);
 	/* The copy allocates memory for the matrix, then this resize call will also
 	 * allocate and copy the memory. There is probably a better way to avoid this
@@ -113,7 +125,7 @@ PolytopeCandidate::extend_by_inner_products(const arma::vec & inner_vector) cons
 	} else {
 		result._vectors.add_vector(new_vec);
 	}
-	/* Add new inner products to the gram matrix */
+
 	const arma::uword last_col = _gram.n_cols;
 	const arma::uword last_row = _gram.n_rows;
 	for(arma::uword i = 0, max = result._vectors.size() - 1;
@@ -144,7 +156,7 @@ PolytopeCandidate::swap_rebase(const arma::uword & a,
 	result._gram.swap_cols(a, b);
 	result._gram.swap_rows(a, b);
 	result._vectors.swap(a, b);
-	result._basis_vecs_trans = _vectors.first_basis_cols().t();
+	result._basis_vecs_trans = result._vectors.first_basis_cols().t();
 	result._basis_vecs_trans.unsafe_col(real_dimension()) *= -1;
 	return result;
 }

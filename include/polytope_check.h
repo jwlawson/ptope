@@ -21,6 +21,7 @@
 #include "polytope_candidate.h"
 
 #include <queue>
+#include <set>
 
 namespace ptope {
 class PolytopeCheck {
@@ -28,7 +29,7 @@ private:
 	static constexpr arma::uword
 	no_vertex = std::numeric_limits<arma::uword>::max();
 	struct Edge {
-		Edge(arma::uword & ind, arma::uvec && vec) 
+		Edge(arma::uword ind, arma::uvec && vec) 
 			: vertex_ind(ind), edge(vec) {}
 		arma::uword vertex_ind;
 		arma::uvec edge;
@@ -39,9 +40,11 @@ public:
 	 * Returns true if it is a compact polytope.
 	 */
 	bool operator()(const PolytopeCandidate & p);
+	bool used_all_vectors() const;
 private:
 	std::vector<arma::uvec> _visited_vertices;
 	std::queue<Edge> _edge_queue;
+	std::set<arma::uword> _unused_vectors;
 	/**
 	 * Find the vertex at the end of an edge. Each edge is constructed from an
 	 * initial vertex, so this finds the other vertex along the edge. If no vertex

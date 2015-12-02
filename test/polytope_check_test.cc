@@ -81,5 +81,36 @@ TEST(PolytopeCheck, Biggest) {
 	EXPECT_FALSE(chk(t));
 	*/
 }
+TEST(PolytopeCheck, 9dim) {
+	arma::mat a = {
+		{ 1.0000e+00 ,      0e+00 , -8.0902e-01,       0e+00, -5.0000e-01,       0e+00, -8.0902e-01, -8.0902e-01,       0e+00,       0e+00,       0e+00, -5.0000e-01},
+		{       0e+00,  1.0000e+00, -5.0000e-01,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00, -5.0000e-01,       0e+00},
+		{ -8.0902e-01, -5.0000e-01,  1.0000e+00, -5.0000e-01,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00},
+		{       0e+00,       0e+00, -5.0000e-01,  1.0000e+00, -5.0000e-01,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00, -5.0000e-01},
+		{ -5.0000e-01,       0e+00,       0e+00, -5.0000e-01,  1.0000e+00, -5.0000e-01,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00, -8.0902e-01},
+		{       0e+00,       0e+00,       0e+00,       0e+00, -5.0000e-01,  1.0000e+00, -5.0000e-01,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00},
+		{ -8.0902e-01,       0e+00,       0e+00,       0e+00,       0e+00, -5.0000e-01,  1.0000e+00, -5.0000e-01,       0e+00,       0e+00,       0e+00,       0e+00},
+		{ -8.0902e-01,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00, -5.0000e-01,  1.0000e+00, -5.0000e-01,       0e+00,       0e+00,       0e+00},
+		{       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00, -5.0000e-01,  1.0000e+00,       0e+00,       0e+00, -5.0000e-01},
+		{       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,  1.0000e+00, -8.0902e-01,           0},
+		{       0e+00, -5.0000e-01,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00, -8.0902e-01,  1.0000e+00,       0e+00},
+		{ -5.0000e-01,       0e+00,       0e+00, -5.0000e-01, -8.0902e-01,       0e+00,       0e+00,       0e+00, -5.0000e-01,       0e+00,       0e+00,  1.0000e+00} };
+	PolytopeCandidate p(elliptic_factory::type_a(9));
+	PolytopeCheck chk;
+	auto q = p.extend_by_inner_products({ min_cos_angle(5), 0, 0, 0, 0, 0, 0, 0, 0 });
+	ASSERT_TRUE(q.valid());
+	auto r = q.extend_by_inner_products({0, 0, min_cos_angle(5), 0, -.5, 0, min_cos_angle(5), min_cos_angle(5), 0});
+	ASSERT_TRUE(r.valid());
+	auto s = r.extend_by_inner_products({ 0, 0, 0, -.5, min_cos_angle(5), 0, 0, 0, -.5 });
+	ASSERT_TRUE(s.valid());
+	EXPECT_FALSE(chk(s));
+	auto m = s.swap_rebase(0, 10);
+	EXPECT_FALSE(chk(m));
+	auto t = r.swap_rebase(0, 10);
+	auto u = t.extend_by_inner_products({ -.5, 0, 0, -.5, min_cos_angle(5), 0, 0, 0, -.5 });
+	ASSERT_TRUE(u.valid());
+	EXPECT_FALSE(chk(u));
+	
+}
 }
 
