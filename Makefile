@@ -12,7 +12,7 @@ OPT += -O3 -ipo -no-prec-div
 B_OPT += $(OPT)
 AR = xiar
 endif
-CXXFLAGS += -DARMA_DONT_USE_WRAPPER -DARMA_NO_DEBUG
+CXXFLAGS += -DARMA_DONT_USE_WRAPPER -DARMA_NO_DEBUG -DVALGRIND_SAFE
 
 uname_S := $(shell sh -c 'uname -s 2>/dev/null || echo not')
 uname_M := $(shell sh -c 'uname -m 2>/dev/null || echo not')

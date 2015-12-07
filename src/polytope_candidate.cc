@@ -45,6 +45,14 @@ double eucl_sq_norm(const arma::vec & a) {
 	}
 	return sq;
 }
+/* As the program is never run in parallel with shared resources, we can safely
+ * cache these at a program/global level */
+arma::vec __new_vec_cached;
+arma::vec __null_vec_cached;
+#ifdef VALGRIND_SAFE
+arma::mat __q_cached;
+arma::mat __r_cached;
+#endif
 }
 PolytopeCandidate PolytopeCandidate::InValid;
 PolytopeCandidate::PolytopeCandidate(const GramMatrix & matrix)
@@ -71,8 +79,9 @@ PolytopeCandidate::PolytopeCandidate(const double * gram_ptr, int gram_size,
 
 PolytopeCandidate
 PolytopeCandidate::extend_by_inner_products(const arma::vec & inner_vector) const {
-	arma::vec new_vec = arma::solve(_basis_vecs_trans, inner_vector);
-	if(_hyperbolic && std::abs(new_vec(new_vec.size() - 1)) > error) {
+	arma::solve(__new_vec_cached, _basis_vecs_trans, inner_vector);
+	if(_hyperbolic && 
+			std::abs(__new_vec_cached(__new_vec_cached.size() - 1)) > error) {
 		/* 
 		 * Rescale the new vector by adding something from the nullspace, so that
 		 * the norm of the vector is 1.
@@ -88,28 +97,34 @@ PolytopeCandidate::extend_by_inner_products(const arma::vec & inner_vector) cons
 		 * which has solution:
 		 * 	l = (-<a,x> + sqrt( <a,x>*<a,x> + <a,a>(<x,x> - 1) ))/<a,a>
 		 */
-		// arma::null was introduced in arma version 5
-		arma::vec n = arma::null(_basis_vecs_trans);
-		const double ax = mink_inner_prod(n, new_vec);
-		const double aa = mink_inner_prod(n);
-		const double xx = mink_inner_prod(new_vec);
+#ifdef VALGRIND_SAFE
+		arma::qr(__q_cached, __r_cached, _basis_vecs_trans.t());
+		__null_vec_cached = __q_cached.col(__q_cached.n_cols - 1);
+#else
+		// arma::null was introduced in arma version 5 and not supported by Valgrind
+		// 3.10.1
+		arma::null(__null_vec_cached, _basis_vecs_trans);
+#endif
+		const double ax = mink_inner_prod(__null_vec_cached, __new_vec_cached);
+		const double aa = mink_inner_prod(__null_vec_cached);
+		const double xx = mink_inner_prod(__new_vec_cached);
 		const double l = (-ax + std::sqrt(ax * ax + aa * (1 - xx)) )/aa;
-		new_vec = new_vec + (l * n);
+		__new_vec_cached += (l * __null_vec_cached);
 	} else {
-		const double e_norm = eucl_sq_norm(new_vec);
+		const double e_norm = eucl_sq_norm(__new_vec_cached);
 		if(e_norm - 1.0 < error) {
 			/* Invalid set of angles. */
 			return PolytopeCandidate::InValid;
 		}
 		if(_hyperbolic) {
-			new_vec(new_vec.size()-1) = std::sqrt(e_norm - 1.0);
+			__new_vec_cached(__new_vec_cached.size()-1) = std::sqrt(e_norm - 1.0);
 		} else {
-			const arma::uword last_entry = new_vec.size();
-			new_vec.insert_rows(last_entry, 1, false);
-			new_vec(last_entry) = std::sqrt(e_norm - 1.0);
+			const arma::uword last_entry = __new_vec_cached.size();
+			__new_vec_cached.insert_rows(last_entry, 1, false);
+			__new_vec_cached(last_entry) = std::sqrt(e_norm - 1.0);
 		}
 	}
-	return extend_by_vector(new_vec);
+	return extend_by_vector(__new_vec_cached);
 }
 PolytopeCandidate
 PolytopeCandidate::extend_by_vector(const arma::vec & new_vec) const {
