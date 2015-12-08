@@ -14,6 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+ * Candidate to be a polytope. Contains both the gram matrix and the vectors
+ * which make up the polytope.
+ *
+ * Warning: This class is *not* thread safe for use in shared memory
+ * applications.
+ */
 #pragma once
 #ifndef PTOPE_POLYTOPE_CANDIDATE_H_
 #define PTOPE_POLYTOPE_CANDIDATE_H_
@@ -51,10 +58,26 @@ class PolytopeCandidate {
 		PolytopeCandidate
 		extend_by_inner_products(const arma::vec & new_vector) const;
 		/**
+		 * Given a vector of inner products with the basis vectors extend the
+		 * polytope to include the new hyperplane defined by this vector.
+		 *
+		 * The result is placed in the provided polytope candidate.
+		 */
+		bool
+		extend_by_inner_products(PolytopeCandidate & result,
+				const arma::vec & new_vector) const;
+		/**
 		 * Extend the polytope by a given normal vector.
 		 */
 		PolytopeCandidate
 		extend_by_vector(const arma::vec & new_vector) const;
+		/**
+		 * Extend the polytope by a given normal vector, with the result in the
+		 * provided polytope candidate.
+		 */
+		void
+		extend_by_vector(PolytopeCandidate & result, const arma::vec & new_vector)
+			const;
 		/**
 		 * Change the order of the vectors, so that a new basis consisting of those
 		 * vectors specified by the given vector is used. This then constructs a new
@@ -137,6 +160,13 @@ class PolytopeCandidate {
 		bool _hyperbolic;
 		/** Check whether the polytope is valid */
 		bool _valid;
+
+		/**
+		 * Calculate the vector which gives the specified inner products.
+		 * Returns true if the vector is valid, false if it is invalid.
+		 */
+		bool
+		vector_from_inner_products(const arma::vec & inner_vector) const;
 };
 }
 #endif

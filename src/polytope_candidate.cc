@@ -86,6 +86,25 @@ PolytopeCandidate::PolytopeCandidate(const double * gram_ptr, int gram_size,
 
 PolytopeCandidate
 PolytopeCandidate::extend_by_inner_products(const arma::vec & inner_vector) const {
+	if(vector_from_inner_products(inner_vector)) {
+		return extend_by_vector(__new_vec_cached);
+	} else {
+		return PolytopeCandidate::InValid;
+	}
+}
+bool
+PolytopeCandidate::extend_by_inner_products(PolytopeCandidate & result,
+		const arma::vec & inner_vector) const {
+	if(vector_from_inner_products(inner_vector)) {
+		extend_by_vector(result, __new_vec_cached);
+		return true;
+	} else {
+		return false;
+	}
+}
+bool
+PolytopeCandidate::vector_from_inner_products(const arma::vec & inner_vector)
+		const {
 	arma::solve(__new_vec_cached, _basis_vecs_trans, inner_vector);
 	if(_hyperbolic && 
 			std::abs(__new_vec_cached(__new_vec_cached.size() - 1)) > error) {
@@ -121,7 +140,7 @@ PolytopeCandidate::extend_by_inner_products(const arma::vec & inner_vector) cons
 		const double e_norm = eucl_sq_norm(__new_vec_cached);
 		if(e_norm - 1.0 < error) {
 			/* Invalid set of angles. */
-			return PolytopeCandidate::InValid;
+			return false;
 		}
 		if(_hyperbolic) {
 			__new_vec_cached(__new_vec_cached.size()-1) = std::sqrt(e_norm - 1.0);
@@ -131,11 +150,17 @@ PolytopeCandidate::extend_by_inner_products(const arma::vec & inner_vector) cons
 			__new_vec_cached(last_entry) = std::sqrt(e_norm - 1.0);
 		}
 	}
-	return extend_by_vector(__new_vec_cached);
+	return true;
 }
 PolytopeCandidate
 PolytopeCandidate::extend_by_vector(const arma::vec & new_vec) const {
 	PolytopeCandidate result;
+	extend_by_vector(result, new_vec);
+	return result;
+}
+void
+PolytopeCandidate::extend_by_vector(PolytopeCandidate & result,
+		const arma::vec & new_vec) const {
 	result._gram.set_size(_gram.n_rows + 1, _gram.n_cols + 1);
 	result._gram.submat(0, 0, _gram.n_rows - 1, _gram.n_cols - 1) = _gram;
 	result._hyperbolic = true;
@@ -158,7 +183,6 @@ PolytopeCandidate::extend_by_vector(const arma::vec & new_vec) const {
 			mink_inner_prod(new_vec, result._vectors.unsafe_get(i));
 	}
 	result._gram(last_row, last_col) = mink_inner_prod(new_vec);
-	return result;
 }
 void
 PolytopeCandidate::rebase_vectors(arma::uvec vec_indices) {
