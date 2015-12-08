@@ -19,6 +19,8 @@
 namespace ptope {
 namespace {
 constexpr double error = 1e-10;
+arma::mat __ellipitic_check_tmp;
+arma::uvec __indices_cached;
 }
 /*
  * The Gram matrix of a polytope contains all the information to determine
@@ -55,40 +57,40 @@ PolytopeCheck::operator()(const PolytopeCandidate & p) {
 	while(!_edge_queue.empty()) _edge_queue.pop();
 
 	const arma::uvec init_v = initial_vertex(p);
-	_visited_vertices.push_back(init_v);
 	for(arma::uword i = 0, max = init_v.size(); i < max; ++i) {
 		_edge_queue.emplace(init_v(i), construct_edge(init_v, i));
 	}
+	_visited_vertices.emplace_back(init_v);
 	while(!_edge_queue.empty()) {
-		Edge cur_edge = _edge_queue.front();
+		const Edge cur_edge = std::move(_edge_queue.front());
 		_edge_queue.pop();
-		arma::uword next_vert_ind = find_edge_end(cur_edge, p);
+		const arma::uword next_vert_ind = find_edge_end(cur_edge, p);
 		if(next_vert_ind == no_vertex) {
 			return false;
 		}
-		arma::uvec new_vert = get_vertex_from_edge(cur_edge, next_vert_ind);
+		const arma::uvec new_vert = get_vertex_from_edge(cur_edge, next_vert_ind);
 		if(vertex_unvisited(new_vert)) {
-			_visited_vertices.push_back(new_vert);
 			add_edges_from_vertex(new_vert, next_vert_ind);
+			_visited_vertices.emplace_back(std::move(new_vert));
 		}
 	}
 	return true;
 }
 arma::uword
 PolytopeCheck::find_edge_end(const Edge & edge,
-		const PolytopeCandidate & p) {
+		const PolytopeCandidate & p) const {
 	const arma::mat & gram = p.gram();
-	arma::uword last_entry = edge.edge.size();
-	arma::uword size = last_entry + 1;
-	arma::uvec indices(size);
-	for(arma::uword k = 0, max = last_entry; k < max; ++k) {
-		indices(k) = edge.edge(k);
+	const arma::uword & last_entry = edge.edge.size();
+	const arma::uword & size = last_entry + 1;
+	__indices_cached.set_size(size);
+	for(arma::uword k = 0; k < last_entry; ++k) {
+		__indices_cached(k) = edge.edge(k);
 	}
 	for(arma::uword i = 0, max = gram.n_cols; i < max; ++i) {
 		if(i == edge.vertex_ind) continue;
 		if(std::find(edge.edge.begin(), edge.edge.end(), i) == edge.edge.end()) {
-			indices(last_entry) = i;
-			auto sub = gram.submat(indices, indices);
+			__indices_cached(last_entry) = i;
+			const auto sub = gram.submat(__indices_cached, __indices_cached);
 			if(is_elliptic(sub)) {
 				return i;
 			}
@@ -104,7 +106,7 @@ PolytopeCheck::find_edge_end(const Edge & edge,
 arma::uvec
 PolytopeCheck::initial_vertex(const PolytopeCandidate & p) const {
 	const VectorFamily & vf = p.vector_family();
-	arma::uword last_val = p.real_dimension();
+	const arma::uword & last_val = p.real_dimension();
 	arma::uvec result(last_val);
 	arma::uword result_ind = 0;
 	for(arma::uword i = 0, max = vf.size();
@@ -135,7 +137,6 @@ PolytopeCheck::construct_edge(const arma::uvec & vertex,
 void
 PolytopeCheck::add_edges_from_vertex(const arma::uvec & vertex,
 		const arma::uword & exclude) {
-	_visited_vertices.push_back(vertex);
 	for(arma::uword i = 0, max = vertex.size(); i < max; ++i) {
 		if(vertex(i) == exclude) continue;
 		_edge_queue.emplace(vertex(i), construct_edge(vertex, i));
@@ -145,7 +146,7 @@ arma::uvec
 PolytopeCheck::get_vertex_from_edge(const Edge & cur_edge,
 		const arma::uword & vertex_index) const {
 	arma::uvec new_vert(cur_edge.edge.size() + 1);
-	arma::uword last_entry = cur_edge.edge.size();
+	const arma::uword & last_entry = cur_edge.edge.size();
 	for(arma::uword i = 0; i < last_entry; ++i) {
 		new_vert(i) = cur_edge.edge(i);
 	}
@@ -158,8 +159,9 @@ PolytopeCheck::get_vertex_from_edge(const Edge & cur_edge,
 bool
 PolytopeCheck::vertex_unvisited(const arma::uvec & vertex) const {
 	return std::find_if(_visited_vertices.begin(), _visited_vertices.end(),
-			[vertex](arma::uvec u) -> bool {arma::uvec diff = vertex - u;
-			for(arma::uword val : diff){if(val != 0) return false;} return true;})
+			[vertex](arma::uvec u) -> bool { const arma::uword & size = u.size();
+			for(arma::uword i = 0; i < size; ++i){if(u(i) != vertex(i)) return false;}
+			return true;})
 		== _visited_vertices.end();
 }
 /*
@@ -177,9 +179,9 @@ PolytopeCheck::vertex_unvisited(const arma::uvec & vertex) const {
  *  	decomp (using BLAS/LAPACK) and seeing if it successful.
  */
 bool
-PolytopeCheck::is_elliptic(const arma::mat & mat) {
+PolytopeCheck::is_elliptic(const arma::mat & mat) const {
 	if(arma::det(mat) <= -error) return false;
-	bool success = arma::chol(_ellipitic_check_tmp, mat);
+	bool success = arma::chol(__ellipitic_check_tmp, mat);
 	return success;
 }
 }

@@ -43,7 +43,6 @@ public:
 private:
 	std::vector<arma::uvec> _visited_vertices;
 	std::queue<Edge> _edge_queue;
-	arma::mat _ellipitic_check_tmp;
 	/**
 	 * Find the vertex at the end of an edge. Each edge is constructed from an
 	 * initial vertex, so this finds the other vertex along the edge. If no vertex
@@ -53,7 +52,7 @@ private:
 	 * edge to a vertex.
 	 */
 	arma::uword
-	find_edge_end(const Edge & edge, const PolytopeCandidate & p);
+	find_edge_end(const Edge & edge, const PolytopeCandidate & p) const;
 	/**
 	 * Find an initial elliptic subdiagram to use as initial vertex.
 	 */
@@ -89,7 +88,7 @@ private:
 	 * Check whether the given matrix is elliptic (i.e. positive definite).
 	 */
 	bool
-	is_elliptic(const arma::mat & mat);
+	is_elliptic(const arma::mat & mat) const;
 };
 }
 #endif
