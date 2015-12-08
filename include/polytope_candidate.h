@@ -28,7 +28,7 @@ class PolytopeCandidate {
 		 * Default constructor. No methods will work with an instance created using
 		 * this. Just here for compatability.
 		 */
-		PolytopeCandidate() : _vectors(arma::mat()), _valid(false) {}
+		PolytopeCandidate();
 		/**
 		 * Create a polytope candidate from an initial Gram matrix. The matrix can
 		 * then be used to construct a set of vectors which form the normal vectors

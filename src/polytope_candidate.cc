@@ -55,27 +55,34 @@ arma::mat __r_cached;
 #endif
 }
 PolytopeCandidate PolytopeCandidate::InValid;
+PolytopeCandidate::PolytopeCandidate()
+: _gram(),
+	_vectors(arma::mat()),
+	_basis_vecs_trans(),
+	_hyperbolic(false),
+	_valid(false) {}
+
 PolytopeCandidate::PolytopeCandidate(const GramMatrix & matrix)
 : _gram(matrix),
-		_vectors(arma::chol(matrix)),
-		_basis_vecs_trans(_vectors.underlying_matrix().t()),
-		_hyperbolic(false),
-		_valid(true) {}
+	_vectors(arma::chol(matrix)),
+	_basis_vecs_trans(_vectors.underlying_matrix().t()),
+	_hyperbolic(false),
+	_valid(true) {}
 
 PolytopeCandidate::PolytopeCandidate(GramMatrix && matrix)
 : _gram(matrix),
-		_vectors(arma::chol(matrix)),
-		_basis_vecs_trans(_vectors.underlying_matrix().t()),
-		_hyperbolic(false),
-		_valid(true) {}
+	_vectors(arma::chol(matrix)),
+	_basis_vecs_trans(_vectors.underlying_matrix().t()),
+	_hyperbolic(false),
+	_valid(true) {}
 
 PolytopeCandidate::PolytopeCandidate(const double * gram_ptr, int gram_size,
 		const double * vector_ptr, int vector_dim, int no_vectors)
-	: _gram(gram_ptr, gram_size, gram_size),
-		_vectors(vector_ptr, vector_dim, no_vectors),
-		_basis_vecs_trans(_vectors.underlying_matrix().t()),
-		_hyperbolic(true),
-		_valid(true) {}
+: _gram(gram_ptr, gram_size, gram_size),
+	_vectors(vector_ptr, vector_dim, no_vectors),
+	_basis_vecs_trans(_vectors.underlying_matrix().t()),
+	_hyperbolic(true),
+	_valid(true) {}
 
 PolytopeCandidate
 PolytopeCandidate::extend_by_inner_products(const arma::vec & inner_vector) const {
@@ -128,23 +135,23 @@ PolytopeCandidate::extend_by_inner_products(const arma::vec & inner_vector) cons
 }
 PolytopeCandidate
 PolytopeCandidate::extend_by_vector(const arma::vec & new_vec) const {
-	PolytopeCandidate result(*this);
-	/* The copy allocates memory for the matrix, then this resize call will also
-	 * allocate and copy the memory. There is probably a better way to avoid this
-	 * double allocation. */
-	result._gram.resize(_gram.n_rows + 1, _gram.n_cols + 1);
+	PolytopeCandidate result;
+	result._gram.set_size(_gram.n_rows + 1, _gram.n_cols + 1);
+	result._gram.submat(0, 0, _gram.n_rows - 1, _gram.n_cols - 1) = _gram;
+	result._hyperbolic = true;
+	result._valid = true;
 	if(!_hyperbolic) {
-		result._vectors.add_first_hyperbolic_vector(new_vec);
+		result._vectors.copy_and_add_first_hyperbolic_vector(_vectors, new_vec);
 		result._basis_vecs_trans = result._vectors.first_basis_cols().t();
-		result._hyperbolic = true;
+		/* Note, don't need to multiply last column by -1 as the values are all 0 */
 	} else {
-		result._vectors.add_vector(new_vec);
+		result._vectors.copy_and_add_vector(_vectors, new_vec);
+		result._basis_vecs_trans = _basis_vecs_trans;
 	}
 
 	const arma::uword last_col = _gram.n_cols;
 	const arma::uword last_row = _gram.n_rows;
-	for(arma::uword i = 0, max = result._vectors.size() - 1;
-			i < max; ++i) {
+	for(arma::uword i = 0, max = result._vectors.size() - 1; i < max; ++i) {
 		result._gram(i, last_col) =
 			mink_inner_prod(new_vec, result._vectors.unsafe_get(i));
 		result._gram(last_row, i) =

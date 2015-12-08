@@ -49,6 +49,17 @@ class VectorFamily {
 		void
 		add_first_hyperbolic_vector(const arma::mat & vec);
 		/**
+		 * Copy the provided vector family, and add an additional vector.
+		 */
+		void
+		copy_and_add_vector(const VectorFamily & vf, const arma::vec & vec);
+		/**
+		 * Copy the provided vector family, and add an additional vector.
+		 */
+		void
+		copy_and_add_first_hyperbolic_vector(const VectorFamily & vf,
+				const arma::vec & vec);
+		/**
 		 * Swap two vectors in the family.
 		 */
 		void

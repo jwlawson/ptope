@@ -44,6 +44,30 @@ VectorFamily::add_first_hyperbolic_vector(const arma::mat & vec) {
 		_vectors(i, last_col) = vec(i);
 	}
 }
+void
+VectorFamily::copy_and_add_vector(const VectorFamily & vf,
+		const arma::vec & vec) {
+	const arma::uword & last_col = vf._vectors.n_cols;
+	const arma::uword & last_row = vf._vectors.n_rows;
+	_vectors.set_size(last_row, last_col + 1);
+	_vectors.head_cols(last_col) = vf._vectors;
+	for(arma::uword i = 0, max = last_row; i < max; ++i) {
+		_vectors(i, last_col) = vec(i);
+	}
+}
+void
+VectorFamily::copy_and_add_first_hyperbolic_vector(const VectorFamily & vf,
+		const arma::vec & vec) {
+	const arma::uword & last_col = vf._vectors.n_cols;
+	const arma::uword & last_row = vf._vectors.n_rows;
+	_vectors.set_size(last_row + 1, last_col + 1);
+	_vectors.submat(0, 0, last_row - 1, last_col - 1) = vf._vectors;
+	const arma::uword & size = vec.size();
+	for(arma::uword i = 0; i < size; ++i) {
+		_vectors(last_row, i) = 0;
+		_vectors(i, last_col) = vec(i);
+	}
+}
 arma::vec
 VectorFamily::unsafe_get(const arma::uword index) const {
 	return _vectors.unsafe_col(index);
