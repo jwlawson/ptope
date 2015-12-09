@@ -34,6 +34,16 @@ private:
 		arma::uword vertex_ind;
 		arma::uvec edge;
 	};
+	struct UVecLess {
+		/** true if lhs < rhs, false otherwise. */
+		bool operator()( const arma::uvec & lhs, const arma::uvec & rhs ) const {
+			bool result = true;
+			for(arma::uword i = 0; result && i < lhs.size(); ++i) {
+				result = (lhs(i) < rhs(i));
+			}
+			return result;
+		}
+	};
 public:
 	/**
 	 * Check whether a given polytope candidate is actually a compact polytope.
@@ -41,7 +51,7 @@ public:
 	 */
 	bool operator()(const PolytopeCandidate & p);
 private:
-	std::vector<arma::uvec> _visited_vertices;
+	std::set<arma::uvec, UVecLess> _visited_vertices;
 	std::queue<Edge> _edge_queue;
 	/**
 	 * Find the vertex at the end of an edge. Each edge is constructed from an

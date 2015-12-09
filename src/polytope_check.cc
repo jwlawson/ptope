@@ -60,7 +60,7 @@ PolytopeCheck::operator()(const PolytopeCandidate & p) {
 	for(arma::uword i = 0, max = init_v.size(); i < max; ++i) {
 		_edge_queue.emplace(init_v(i), construct_edge(init_v, i));
 	}
-	_visited_vertices.emplace_back(init_v);
+	_visited_vertices.emplace(std::move(init_v));
 	while(!_edge_queue.empty()) {
 		const Edge cur_edge = std::move(_edge_queue.front());
 		_edge_queue.pop();
@@ -71,7 +71,7 @@ PolytopeCheck::operator()(const PolytopeCandidate & p) {
 		const arma::uvec new_vert = get_vertex_from_edge(cur_edge, next_vert_ind);
 		if(vertex_unvisited(new_vert)) {
 			add_edges_from_vertex(new_vert, next_vert_ind);
-			_visited_vertices.emplace_back(std::move(new_vert));
+			_visited_vertices.emplace(std::move(new_vert));
 		}
 	}
 	return true;
@@ -90,7 +90,7 @@ PolytopeCheck::find_edge_end(const Edge & edge,
 		if(i == edge.vertex_ind) continue;
 		if(std::find(edge.edge.begin(), edge.edge.end(), i) == edge.edge.end()) {
 			__indices_cached(last_entry) = i;
-			const auto sub = gram.submat(__indices_cached, __indices_cached);
+			const auto & sub = gram.submat(__indices_cached, __indices_cached);
 			if(is_elliptic(sub)) {
 				return i;
 			}
@@ -158,11 +158,7 @@ PolytopeCheck::get_vertex_from_edge(const Edge & cur_edge,
  * operator== way as that returns a vector rather than a bool. */
 bool
 PolytopeCheck::vertex_unvisited(const arma::uvec & vertex) const {
-	return std::find_if(_visited_vertices.begin(), _visited_vertices.end(),
-			[vertex](arma::uvec u) -> bool { const arma::uword & size = u.size();
-			for(arma::uword i = 0; i < size; ++i){if(u(i) != vertex(i)) return false;}
-			return true;})
-		== _visited_vertices.end();
+	return _visited_vertices.find(vertex) == _visited_vertices.end();
 }
 /*
  * A matrix is positive definite iff all its eigen values are positive. However
