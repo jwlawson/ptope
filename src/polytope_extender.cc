@@ -38,14 +38,16 @@ PolytopeExtender::PolytopeExtender(const PolytopeCandidate & initial_polytope)
 		_extend_by(_initial.real_dimension()),
 		_progress(_initial.real_dimension()),
 		_progress_max(_inner_products.size() - 1),
-		_has_next(true) {}
+		_has_next(true),
+		_computed_next(false) {}
 PolytopeExtender::PolytopeExtender(PolytopeCandidate && initial_polytope)
 	:	_initial(initial_polytope),
 		_inner_products(__default_inner),
 		_extend_by(_initial.real_dimension()),
 		_progress(_initial.real_dimension()),
 		_progress_max(_inner_products.size() - 1),
-		_has_next(true) {}
+		_has_next(true),
+		_computed_next(false) {}
 PolytopeExtender::PolytopeExtender(const PolytopeCandidate & initial_polytope,
 		const std::vector<uint> & angles)
 	:	_initial(initial_polytope),
@@ -53,7 +55,8 @@ PolytopeExtender::PolytopeExtender(const PolytopeCandidate & initial_polytope,
 		_extend_by(_initial.real_dimension()),
 		_progress(_initial.real_dimension()),
 		_progress_max(_inner_products.size() - 1),
-		_has_next(true) {}
+		_has_next(true),
+		_computed_next(false) {}
 PolytopeExtender::PolytopeExtender(PolytopeCandidate && initial_polytope,
 		const std::vector<uint> & angles)
 	:	_initial(initial_polytope),
@@ -61,25 +64,25 @@ PolytopeExtender::PolytopeExtender(PolytopeCandidate && initial_polytope,
 		_extend_by(_initial.real_dimension()),
 		_progress(_initial.real_dimension()),
 		_progress_max(_inner_products.size() - 1),
-		_has_next(true) {}
+		_has_next(true),
+		_computed_next(false) {}
 /**
  * Check whether a subsequent call to next() will return a valid polytope.
  */
 bool
 PolytopeExtender::has_next(){
-	return _has_next;
+	if(!_computed_next) {
+		_computed_next = compute_next();
+	}
+	return _computed_next;
 }
 /**
  * Compute and return the next extended polytope.
  */
-PolytopeCandidate
+const PolytopeCandidate &
 PolytopeExtender::next(){
-	for(std::size_t i = 0, max = _progress.size(); i < max; ++i) {
-		_extend_by(i) = _inner_products[_progress[i]];
-	}
-	PolytopeCandidate result = _initial.extend_by_inner_products(_extend_by);	
-	increment_progress();
-	return std::move(result);
+	_computed_next = false;
+	return _next;
 }
 void
 PolytopeExtender::set_default_angles(const std::vector<uint> & angles) {
@@ -89,7 +92,7 @@ void
 PolytopeExtender::increment_progress() {
 	bool rollover = true;
 	std::size_t i = 0;
-	std::size_t max = _progress.size();
+	const std::size_t max = _progress.size();
 	for(; rollover && i < max; ++i) {
 		rollover = false;
 		if(++_progress[i] > _progress_max) {
@@ -100,6 +103,18 @@ PolytopeExtender::increment_progress() {
 	if(i == max && rollover) {
 		_has_next = false;
 	}
+}
+bool
+PolytopeExtender::compute_next() {
+	bool success = false;
+	while(!success && _has_next) {
+		for(std::size_t i = 0, max = _progress.size(); i < max; ++i) {
+			_extend_by(i) = _inner_products[_progress[i]];
+		}
+		success = _initial.extend_by_inner_products(_next, _extend_by);
+		increment_progress();
+	}
+	return success;
 }
 }
 

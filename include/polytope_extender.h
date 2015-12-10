@@ -45,7 +45,7 @@ class PolytopeExtender {
 		/**
 		 * Compute and return the next extended polytope.
 		 */
-		PolytopeCandidate
+		const PolytopeCandidate &
 		next();
 		/**
 		 * Set the default angles used to extend the polytopes.
@@ -59,8 +59,17 @@ class PolytopeExtender {
 		std::vector<std::size_t> _progress;
 		std::size_t _progress_max;
 		bool _has_next;
+		PolytopeCandidate _next;
+		bool _computed_next;
 
-		void increment_progress();
+		/**
+		 * Increment the _progress counter, so next call to next() will provide the
+		 * next polytope.
+		 */
+		void
+		increment_progress();
+		bool
+		compute_next();
 };
 }
 #endif

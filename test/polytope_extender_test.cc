@@ -18,6 +18,8 @@
 
 #include <gtest/gtest.h>
 
+#include "elliptic_factory.h"
+
 namespace ptope {
 TEST(PolytopeExtender, RealCount2) {
 	PolytopeCandidate p({{ 1, -.5 }, {-.5, 1} });
@@ -27,7 +29,8 @@ TEST(PolytopeExtender, RealCount2) {
 		ext.next();
 		++count;
 	}
-	EXPECT_EQ(4, count);
+	EXPECT_EQ(0, count);
+	EXPECT_FALSE(ext.has_next());
 }
 TEST(PolytopeExtender, RealCount3) {
 	PolytopeCandidate p({{ 1, -.5, 0 }, {-.5, 1, -.5 }, { 0, -.5, 1 } });
@@ -37,7 +40,8 @@ TEST(PolytopeExtender, RealCount3) {
 		ext.next();
 		++count;
 	}
-	EXPECT_EQ(8, count);
+	EXPECT_EQ(3, count);
+	EXPECT_FALSE(ext.has_next());
 }
 TEST(PolytopeExtender, HypCount3) {
 	PolytopeCandidate p({{ 1, -.5, 0 }, {-.5, 1, -.5 }, { 0, -.5, 1 } });
@@ -48,7 +52,22 @@ TEST(PolytopeExtender, HypCount3) {
 		ext.next();
 		++count;
 	}
-	EXPECT_EQ(8, count);
+	EXPECT_EQ(3, count);
+	EXPECT_FALSE(ext.has_next());
+}
+TEST(PolytopeExtender, NoStop) {
+	PolytopeCandidate p(elliptic_factory::type_a(3));
+	PolytopeExtender ext(p);
+	int count = 0;
+	while(ext.has_next()) {
+		++count;
+		ext.next();
+	}
+	EXPECT_EQ(115, count);
+	EXPECT_FALSE(ext.has_next());
+	EXPECT_FALSE(ext.has_next());
+	EXPECT_FALSE(ext.has_next());
+	EXPECT_FALSE(ext.has_next());
 }
 }
 
