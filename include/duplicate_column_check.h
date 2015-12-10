@@ -32,12 +32,11 @@ class DuplicateColumnCheck {
 static constexpr double error = 1e-14;
 public:
 	bool operator()(const PolytopeCandidate & p) {
-		return operator()(p.gram());
+		return operator()(p.vector_family().underlying_matrix());
 	}
 	bool operator()(const arma::mat & gram) {
 		const arma::uword last_col_ind = gram.n_cols - 1;
 		const arma::vec & last_col = gram.unsafe_col(last_col_ind);
-		arma::vec diff(last_col.size());
 		bool no_duplicate = true;
 		for(arma::uword i = 0; no_duplicate && i < last_col_ind; ++i) {
 			const arma::vec & col = gram.unsafe_col(i);
@@ -55,6 +54,8 @@ public:
 		}
 		return !no_duplicate;
 	}
+private:
+	arma::vec diff;
 };
 }
 #endif

@@ -18,6 +18,8 @@
 
 #include <gtest/gtest.h>
 
+#include "elliptic_factory.h"
+
 namespace ptope {
 TEST(DuplicateColumnCheck, Easy) {
 	arma::mat a = { { 0, 0 }, { 1, 1 } };
@@ -34,6 +36,17 @@ TEST(DuplicateColumnCheck, Bigger) {
   {  -0.9239,  -0.9239,   1.0000,   1.0000 } };
 	DuplicateColumnCheck chk;
 	EXPECT_TRUE(chk(a));
+}
+TEST(DuplicateColumnCheck, Polytope) {
+	PolytopeCandidate p(elliptic_factory::type_a(4));
+	auto r = p.extend_by_inner_products({ -.5, 0, -.5, 0 });
+	ASSERT_TRUE(r.valid());
+	auto s = r.extend_by_inner_products({ -.5, 0, -.5, 0 });
+	ASSERT_TRUE(s.valid());
+	DuplicateColumnCheck chk;
+	EXPECT_FALSE(chk(r));
+	EXPECT_TRUE(chk(s));
+
 }
 }
 
