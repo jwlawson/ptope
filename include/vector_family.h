@@ -119,6 +119,11 @@ class VectorFamily {
 		 */
 		void
 		load(std::istream & os, arma::file_type type);
+		/**
+		 * Swap resources with provided VectorFamily.
+		 */
+		void
+		swap(VectorFamily & vf);
 	private:
 		arma::mat _vectors;
 };

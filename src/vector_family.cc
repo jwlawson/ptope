@@ -89,6 +89,10 @@ void
 VectorFamily::load(std::istream & is, arma::file_type type) {
 	_vectors.load(is, type);
 }
+void
+VectorFamily::swap(VectorFamily & vf) {
+	_vectors.swap(vf._vectors);
+}
 }
 
 

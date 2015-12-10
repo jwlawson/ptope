@@ -25,7 +25,7 @@ class StackedIterator {
 		bool has_next() {
 			return _it2.has_next() || _it.has_next();
 		}
-		Output next() {
+		const Output & next() {
 			if(!_it2.has_next()) {
 				_it2 = EatIt(_it.next());
 			}

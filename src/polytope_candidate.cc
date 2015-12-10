@@ -135,7 +135,8 @@ PolytopeCandidate::vector_from_inner_products(const arma::vec & inner_vector)
 		const double aa = mink_inner_prod(__null_vec_cached);
 		const double xx = mink_inner_prod(__new_vec_cached);
 		const double l = (-ax + std::sqrt(ax * ax + aa * (1 - xx)) )/aa;
-		__new_vec_cached += (l * __null_vec_cached);
+		__null_vec_cached *= l;
+		__new_vec_cached += __null_vec_cached;
 	} else {
 		const double e_norm = eucl_sq_norm(__new_vec_cached);
 		if(e_norm - 1.0 < error) {
@@ -253,6 +254,14 @@ PolytopeCandidate::load(std::istream & is) {
 	_basis_vecs_trans = _vectors.first_basis_cols().t();
 	is >> _hyperbolic;
 	is >> _valid;
+}
+void
+PolytopeCandidate::swap(PolytopeCandidate & p) {
+	_gram.swap(p._gram);
+	_vectors.swap(p._vectors);
+	_basis_vecs_trans.swap(p._basis_vecs_trans);
+	std::swap(_hyperbolic, p._hyperbolic);
+	std::swap(_valid, p._valid);
 }
 std::ostream &
 operator<<(std::ostream & os, const PolytopeCandidate & poly) {

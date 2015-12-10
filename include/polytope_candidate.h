@@ -133,6 +133,11 @@ class PolytopeCandidate {
 		void
 		load(std::istream & is);
 		/**
+		 * Swap the resources of this polytope with the one provided.
+		 */
+		void
+		swap(PolytopeCandidate & p);
+		/**
 		 * Print matrix and vectors to output stream.
 		 */
 		friend

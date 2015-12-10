@@ -40,13 +40,14 @@ class FilteredIterator {
 		bool has_next() {
 			return _it.has_next();
 		}
-		Output next() {
-			Output result(_next);
+		const Output & next() {
+			_result.swap(_next);
 			get_next();
-			return result;
+			return _result;
 		}
 	private:
 		It _it;
+		Output _result;
 		Output _next;
 		Filter _filter;
 
@@ -79,13 +80,14 @@ class FilteredPrintIterator {
 		bool has_next() {
 			return _it.has_next();
 		}
-		Output next() {
-			Output result(_next);
+		const Output & next() {
+			_result.swap(_next);
 			get_next();
-			return result;
+			return _result;
 		}
 	private:
 		It _it;
+		Output _result;
 		Output _next;
 		std::ostream & _os;
 		Filter _filter;
