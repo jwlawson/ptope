@@ -28,8 +28,15 @@ std::vector<double> angles_to_prods(const std::vector<uint> & angles) {
 			result[i] = -std::cos(arma::datum::pi/angles[i]);
 		}
 	}
+	std::sort(result.begin(), result.end());
 	return result;
 }
+struct DLess {
+	bool
+	operator()(const double & lhs, const double & rhs) {
+		return (lhs < rhs - error);
+	}
+} __d_less;
 }
 const std::vector<uint>
 AngleCheck::__default_mults = { 2, 3, 4, 5, 8 };
@@ -56,10 +63,8 @@ AngleCheck::operator()(const arma::mat & m) {
 			continue;
 		}
 		/* No entries apart form diagonals should be greater than 0 */
-		/* Uses lambda to check double values up to error */
-		if(val > error || std::find_if(_values.begin(), _values.end(),
-					[val](const double & b){return std::abs(b - val) < error; } )
-				== _values.end()) {
+		if(val > error || 
+				!std::binary_search(_values.begin(), _values.end(), val, __d_less)) {
 			/* Value not found */
 			result = false;
 		}
