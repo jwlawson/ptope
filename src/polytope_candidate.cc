@@ -178,10 +178,10 @@ PolytopeCandidate::extend_by_vector(PolytopeCandidate & result,
 	const arma::uword last_col = _gram.n_cols;
 	const arma::uword last_row = _gram.n_rows;
 	for(arma::uword i = 0, max = result._vectors.size() - 1; i < max; ++i) {
-		result._gram(i, last_col) =
-			mink_inner_prod(new_vec, result._vectors.unsafe_get(i));
-		result._gram(last_row, i) =
-			mink_inner_prod(new_vec, result._vectors.unsafe_get(i));
+		/* gcc does not automatically cache this column. */
+		const auto & old_vec = result._vectors.unsafe_get(i);
+		result._gram(i, last_col) = mink_inner_prod(new_vec, old_vec);
+		result._gram(last_row, i) = mink_inner_prod(new_vec, old_vec);
 	}
 	result._gram(last_row, last_col) = mink_inner_prod(new_vec);
 }
