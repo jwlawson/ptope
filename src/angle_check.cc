@@ -16,21 +16,11 @@
  */
 #include "angle_check.h"
 
+#include "angles.h"
+
 namespace ptope {
 namespace {
 constexpr double error = 1e-14;
-std::vector<double> angles_to_prods(const std::vector<uint> & angles) {
-	std::vector<double> result(angles.size());
-	for(std::size_t i = 0, max = angles.size(); i < max; ++i) {
-		if(angles[i] == 2) {
-			result[i] = 0;
-		} else {
-			result[i] = -std::cos(arma::datum::pi/angles[i]);
-		}
-	}
-	std::sort(result.begin(), result.end());
-	return result;
-}
 struct DLess {
 	bool
 	operator()(const double & lhs, const double & rhs) {
@@ -38,16 +28,10 @@ struct DLess {
 	}
 } __d_less;
 }
-const std::vector<uint>
-AngleCheck::__default_mults = { 2, 3, 4, 5, 8 };
-const std::vector<double>
-AngleCheck::__default_inner = angles_to_prods(__default_mults);
 AngleCheck::AngleCheck()
-	: _values(__default_inner) {}
-AngleCheck::AngleCheck(const std::vector<uint> & angles)
-	: _values(angles_to_prods(angles)) {}
-AngleCheck::AngleCheck(std::vector<uint> && angles)
-	: _values(angles_to_prods(angles)) {}
+: _values(Angles::get().inner_products()) {
+	std::sort(_values.begin(), _values.end());
+}
 bool
 AngleCheck::operator()(const PolytopeCandidate & p) {
 	return operator()(p.gram());
@@ -62,7 +46,7 @@ AngleCheck::operator()(const arma::mat & m) {
 		if(val < (-1.0 + error) ) {
 			continue;
 		}
-		/* No entries apart form diagonals should be greater than 0 */
+		/* No entries apart from diagonals should be greater than 0 */
 		if(val > error || 
 				!std::binary_search(_values.begin(), _values.end(), val, __d_less)) {
 			/* Value not found */

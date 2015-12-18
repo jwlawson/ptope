@@ -27,12 +27,8 @@ namespace ptope {
  * returns false.
  */
 class AngleCheck {
-static const std::vector<uint> __default_mults;
-static const std::vector<double> __default_inner;
 public:
 	AngleCheck();
-	AngleCheck(const std::vector<uint> & angles);
-	AngleCheck(std::vector<uint> && angles);
 	bool operator()(const PolytopeCandidate & p);
 	bool operator()(const arma::mat & m);
 private:

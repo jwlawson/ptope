@@ -18,6 +18,8 @@
 
 #include <gtest/gtest.h>
 
+#include "angles.h"
+
 namespace ptope {
 namespace {
 double min_cos_angle(uint mult) {
@@ -25,6 +27,7 @@ double min_cos_angle(uint mult) {
 }
 }
 TEST(AngleCheck, Simple2) {
+	Angles::get().set_angles({2, 3, 4, 5, 8});
 	arma::mat a = { { 1, 0 }, { 0, 1 } };
 	AngleCheck chk;
 	EXPECT_TRUE(chk(a));
@@ -33,6 +36,7 @@ TEST(AngleCheck, Simple2) {
 	EXPECT_FALSE(chk(b));
 }
 TEST(AngleCheck, Simple3) {
+	Angles::get().set_angles({2, 3, 4});
 	arma::mat a = { { 1, min_cos_angle(4), min_cos_angle(3) },
 		{ min_cos_angle(4), 1, min_cos_angle(4) },
 		{ min_cos_angle(3), min_cos_angle(4), 1} };
@@ -51,7 +55,8 @@ TEST(AngleCheck, Simple3) {
 	EXPECT_TRUE(chk(a));
 }
 TEST(AngleCheck, CustomAngles) {
-	AngleCheck chk({2, 3});
+	Angles::get().set_angles({2,3});
+	AngleCheck chk;
 	arma::mat a = { { 1, 0 }, { 0, 1 } };
 	EXPECT_TRUE(chk(a));
 	a(2) = min_cos_angle(3);
@@ -60,6 +65,7 @@ TEST(AngleCheck, CustomAngles) {
 	EXPECT_FALSE(chk(a));
 }
 TEST(AngleCheck, DottedEdges) {
+	Angles::get().set_angles({2, 3, 4, 5, 8});
 	arma::mat a = { { 1, min_cos_angle(4), -1.5 },
 		{ min_cos_angle(3), 1, min_cos_angle(5) },
 		{ min_cos_angle(3), min_cos_angle(4), 1} };
