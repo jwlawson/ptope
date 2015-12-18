@@ -275,6 +275,15 @@ PolytopeCandidate::swap(PolytopeCandidate & p) {
 	std::swap(_hyperbolic, p._hyperbolic);
 	std::swap(_valid, p._valid);
 }
+PolytopeCandidate &
+PolytopeCandidate::operator=(const PolytopeCandidate & p) {
+	*_gram = *p._gram;
+	_basis_vecs_trans = p._basis_vecs_trans;
+	_vectors = p._vectors;
+	_hyperbolic = p._hyperbolic;
+	_valid = p._valid;
+	return *this;
+}
 std::ostream &
 operator<<(std::ostream & os, const PolytopeCandidate & poly) {
 	poly._gram->print(os, "Gram:");

@@ -141,6 +141,8 @@ class PolytopeCandidate {
 		 */
 		void
 		swap(PolytopeCandidate & p);
+		PolytopeCandidate &
+		operator=(const PolytopeCandidate & p);
 		/**
 		 * Print matrix and vectors to output stream.
 		 */
