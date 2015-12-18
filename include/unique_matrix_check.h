@@ -26,11 +26,12 @@
 
 namespace ptope {
 class UniqueMatrixCheck {
-	typedef std::unordered_set<arma::mat, ptope::MEquivHash, ptope::MEquivEqual>
+	typedef std::shared_ptr<const arma::mat> MPtr;
+	typedef std::unordered_set<MPtr, ptope::MEquivHash, ptope::MEquivEqual>
 		UniqueMSet;
 public:
 	bool
-	operator()(const arma::mat & m);
+	operator()(const MPtr & m);
 	bool
 	operator()(const PolytopeCandidate & p);
 private:

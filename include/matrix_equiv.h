@@ -26,7 +26,7 @@ struct MEquivHash {
 	std::size_t
 	operator()(const arma::mat & m) const;
 	std::size_t
-	operator()(const std::shared_ptr<arma::mat> & p) const {
+	operator()(const std::shared_ptr<const arma::mat> & p) const {
 		return operator()(*p);
 	}
 };
@@ -38,8 +38,8 @@ struct MEquivEqual {
 	bool
 	operator()(const arma::mat & lhs, const arma::mat & rhs) const;
 	bool
-	operator()(const std::shared_ptr<arma::mat> & lhs,
-			const std::shared_ptr<arma::mat> & rhs) const {
+	operator()(const std::shared_ptr<const arma::mat> & lhs,
+			const std::shared_ptr<const arma::mat> & rhs) const {
 		return operator()(*lhs, *rhs);
 	}
 private:

@@ -19,10 +19,10 @@
 namespace ptope {
 bool
 UniqueMatrixCheck::operator()(const PolytopeCandidate & p) {
-	return operator()(p.gram());
+	return operator()(p.gram_ptr());
 }
 bool
-UniqueMatrixCheck::operator()(const arma::mat & m) {
+UniqueMatrixCheck::operator()(const std::shared_ptr<const arma::mat> & m) {
 	bool result = (_set.find(m) == _set.end());
 	if(result) {
 		_set.insert(m);
