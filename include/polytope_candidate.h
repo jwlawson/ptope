@@ -25,17 +25,20 @@
 #ifndef PTOPE_POLYTOPE_CANDIDATE_H_
 #define PTOPE_POLYTOPE_CANDIDATE_H_
 
+#include <memory>
+
 #include "vector_family.h"
 
 namespace ptope {
 class PolytopeCandidate {
 	public:
-		typedef arma::mat GramMatrix;
+		typedef std::shared_ptr<arma::mat> GramMatrix;
 		/**
 		 * Default constructor. No methods will work with an instance created using
 		 * this. Just here for compatability.
 		 */
 		PolytopeCandidate();
+		PolytopeCandidate(const PolytopeCandidate & p);
 		/**
 		 * Create a polytope candidate from an initial Gram matrix. The matrix can
 		 * then be used to construct a set of vectors which form the normal vectors
@@ -44,6 +47,8 @@ class PolytopeCandidate {
 		 */
 		PolytopeCandidate(const GramMatrix & matrix);
 		PolytopeCandidate(GramMatrix && matrix);
+		PolytopeCandidate(const arma::mat & matrix);
+		PolytopeCandidate(arma::mat && matrix);
 		/**
 		 * Create a polytope candidate from specified c-style arrays of specified
 		 * size. Don't use unless you know what you are doing. The arrays are
@@ -51,6 +56,7 @@ class PolytopeCandidate {
 		 */
 		PolytopeCandidate(const double * gram_ptr, int gram_size,
 				const double * vector_ptr, int vector_dim, int no_vectors);
+		PolytopeCandidate(std::initializer_list<std::initializer_list<double>> l);
 		/**
 		 * Given a vector of inner products with the basis vectors extend the
 		 * polytope to include the new hyperplane defined by this vector.
@@ -91,12 +97,6 @@ class PolytopeCandidate {
 		PolytopeCandidate
 		swap_rebase(const arma::uword & a, const arma::uword & b) const;
 		/**
-		 * Recomputes the gram matrix of the polytope. This should not be needed and
-		 * should not make any difference to the polytope.
-		 */
-		void
-		recompute_gram();
-		/**
 		 * Get the signature of the polytope's gram matrix.
 		 */
 		std::pair<uint, uint>
@@ -113,7 +113,11 @@ class PolytopeCandidate {
 		 */
 		const arma::mat &
 		gram() const {
-			return _gram;
+			return *_gram;
+		}
+		std::shared_ptr<const arma::mat>
+		gram_ptr() const {
+			return static_cast<std::shared_ptr<const arma::mat>>(_gram);
 		}
 		/**
 		 * Get a reference to the polytope's vector family.

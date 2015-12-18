@@ -54,32 +54,61 @@ arma::mat __r_cached;
 }
 PolytopeCandidate PolytopeCandidate::InValid;
 PolytopeCandidate::PolytopeCandidate()
-: _gram(),
+: _gram(std::make_shared<arma::mat>()),
 	_vectors(arma::mat()),
 	_basis_vecs_trans(),
 	_hyperbolic(false),
 	_valid(false) {}
 
+PolytopeCandidate::PolytopeCandidate(const PolytopeCandidate & p)
+: _gram(std::make_shared<arma::mat>(*p._gram)),
+	_vectors(p._vectors),
+	_basis_vecs_trans(p._basis_vecs_trans),
+	_hyperbolic(p._hyperbolic),
+	_valid(p._valid) {}
+
 PolytopeCandidate::PolytopeCandidate(const GramMatrix & matrix)
 : _gram(matrix),
-	_vectors(arma::chol(matrix)),
+	_vectors(arma::chol(*matrix)),
 	_basis_vecs_trans(_vectors.underlying_matrix().t()),
 	_hyperbolic(false),
 	_valid(true) {}
 
 PolytopeCandidate::PolytopeCandidate(GramMatrix && matrix)
 : _gram(matrix),
+	_vectors(arma::chol(*_gram)),
+	_basis_vecs_trans(_vectors.underlying_matrix().t()),
+	_hyperbolic(false),
+	_valid(true) {}
+
+PolytopeCandidate::PolytopeCandidate(const arma::mat & matrix)
+: _gram(std::make_shared<arma::mat>(matrix)),
 	_vectors(arma::chol(matrix)),
+	_basis_vecs_trans(_vectors.underlying_matrix().t()),
+	_hyperbolic(false),
+	_valid(true) {}
+
+PolytopeCandidate::PolytopeCandidate(arma::mat && matrix)
+: _gram(std::make_shared<arma::mat>(matrix)),
+	_vectors(arma::chol(*_gram)),
 	_basis_vecs_trans(_vectors.underlying_matrix().t()),
 	_hyperbolic(false),
 	_valid(true) {}
 
 PolytopeCandidate::PolytopeCandidate(const double * gram_ptr, int gram_size,
 		const double * vector_ptr, int vector_dim, int no_vectors)
-: _gram(gram_ptr, gram_size, gram_size),
+: _gram(std::make_shared<arma::mat>(gram_ptr, gram_size, gram_size)),
 	_vectors(vector_ptr, vector_dim, no_vectors),
 	_basis_vecs_trans(_vectors.underlying_matrix().t()),
 	_hyperbolic(true),
+	_valid(true) {}
+
+PolytopeCandidate::PolytopeCandidate(
+		std::initializer_list<std::initializer_list<double>> l)
+: _gram(std::make_shared<arma::mat>(l)),
+	_vectors(arma::chol(*_gram)),
+	_basis_vecs_trans(_vectors.underlying_matrix().t()),
+	_hyperbolic(false),
 	_valid(true) {}
 
 PolytopeCandidate
@@ -154,8 +183,8 @@ PolytopeCandidate::extend_by_vector(const arma::vec & new_vec) const {
 void
 PolytopeCandidate::extend_by_vector(PolytopeCandidate & result,
 		const arma::vec & new_vec) const {
-	result._gram.set_size(_gram.n_rows + 1, _gram.n_cols + 1);
-	result._gram.submat(0, 0, _gram.n_rows - 1, _gram.n_cols - 1) = _gram;
+	result._gram->set_size(_gram->n_rows + 1, _gram->n_cols + 1);
+	result._gram->submat(0, 0, _gram->n_rows - 1, _gram->n_cols - 1) = *_gram;
 	result._hyperbolic = true;
 	result._valid = true;
 	if(!_hyperbolic) {
@@ -167,23 +196,24 @@ PolytopeCandidate::extend_by_vector(PolytopeCandidate & result,
 		result._basis_vecs_trans = _basis_vecs_trans;
 	}
 
-	const arma::uword last_col = _gram.n_cols;
-	const arma::uword last_row = _gram.n_rows;
+	const arma::uword last_col = _gram->n_cols;
+	const arma::uword last_row = _gram->n_rows;
 	for(arma::uword i = 0, max = result._vectors.size() - 1; i < max; ++i) {
 		/* gcc does not automatically cache this column. */
 		const auto & old_vec = result._vectors.unsafe_get(i);
-		result._gram(i, last_col) = mink_inner_prod(new_vec, old_vec);
-		result._gram(last_row, i) = mink_inner_prod(new_vec, old_vec);
+		const double val = mink_inner_prod(new_vec, old_vec);
+		result._gram->at(i, last_col) = val;
+		result._gram->at(last_row, i) = val;
 	}
-	result._gram(last_row, last_col) = mink_inner_prod(new_vec);
+	result._gram->at(last_row, last_col) = mink_inner_prod(new_vec);
 }
 void
 PolytopeCandidate::rebase_vectors(arma::uvec vec_indices) {
 	std::sort(vec_indices.begin(), vec_indices.end());
 	for(arma::uword i = 0; i < vec_indices.size(); ++i) {
 		_vectors.swap(i, vec_indices(i));
-		_gram.swap_cols(i, vec_indices(i));
-		_gram.swap_rows(i, vec_indices(i));
+		_gram->swap_cols(i, vec_indices(i));
+		_gram->swap_rows(i, vec_indices(i));
 	}
 	_basis_vecs_trans = _vectors.first_basis_cols().t();
 	_basis_vecs_trans.unsafe_col(real_dimension()) *= -1;
@@ -192,26 +222,16 @@ PolytopeCandidate
 PolytopeCandidate::swap_rebase(const arma::uword & a,
 		const arma::uword & b) const {
 	PolytopeCandidate result(*this);
-	result._gram.swap_cols(a, b);
-	result._gram.swap_rows(a, b);
+	result._gram->swap_cols(a, b);
+	result._gram->swap_rows(a, b);
 	result._vectors.swap(a, b);
 	result._basis_vecs_trans = result._vectors.first_basis_cols().t();
 	result._basis_vecs_trans.unsafe_col(real_dimension()) *= -1;
 	return result;
 }
-void
-PolytopeCandidate::recompute_gram() {
-	arma::uword cm = _gram.n_cols;
-	for(arma::uword row = 0, rm = _gram.n_rows; row < rm; ++row) {
-		for(arma::uword col = 0; col < cm; ++col) {
-			_gram(row,col) = mink_inner_prod(_vectors.unsafe_get(row),
-					_vectors.unsafe_get(col));
-		}
-	}
-}
 std::pair<uint,uint>
 PolytopeCandidate::signature() const {
-	arma::vec evalues = arma::eig_sym(_gram);
+	arma::vec evalues = arma::eig_sym(*_gram);
 	auto result = std::make_pair((uint)0, (uint) 0);
 	for(arma::uword i = 0; i < evalues.size(); ++i) {
 		if (std::abs(evalues(i)) < error) {
@@ -234,14 +254,14 @@ PolytopeCandidate::real_dimension() const {
 }
 void
 PolytopeCandidate::save(std::ostream & os) {
-	_gram.save(os, arma::file_type::arma_binary);
+	_gram->save(os, arma::file_type::arma_binary);
 	_vectors.save(os, arma::file_type::arma_binary);
 	os << _hyperbolic << " ";
 	os << _valid;
 }
 void
 PolytopeCandidate::load(std::istream & is) {
-	_gram.load(is, arma::file_type::arma_binary);
+	_gram->load(is, arma::file_type::arma_binary);
 	_vectors.load(is, arma::file_type::arma_binary);
 	_basis_vecs_trans = _vectors.first_basis_cols().t();
 	is >> _hyperbolic;
@@ -257,7 +277,7 @@ PolytopeCandidate::swap(PolytopeCandidate & p) {
 }
 std::ostream &
 operator<<(std::ostream & os, const PolytopeCandidate & poly) {
-	poly._gram.print(os, "Gram:");
+	poly._gram->print(os, "Gram:");
 	poly._vectors.underlying_matrix().print(os, "Vectors:");
 	return os;
 }
