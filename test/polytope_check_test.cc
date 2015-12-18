@@ -112,5 +112,24 @@ TEST(PolytopeCheck, 9dim) {
 	EXPECT_FALSE(chk(u));
 	
 }
+TEST(PolytopeCheck, Odd4) {
+	PolytopeCandidate p(elliptic_factory::type_a(4));
+	auto q = p.extend_by_inner_products({ min_cos_angle(5), -.5, 0, 0});
+	ASSERT_TRUE(q.valid());
+	auto r = q.extend_by_inner_products({0, -.5, min_cos_angle(5), -.5 });
+	ASSERT_TRUE(r.valid());
+	auto s = r.swap_rebase(3,5);
+	auto t = s.extend_by_inner_products({ 0, -.5, 0, 0 });
+	ASSERT_TRUE(t.valid());
+	PolytopeCheck chk;
+	EXPECT_TRUE(chk(t));
+	EXPECT_TRUE(chk.used_all());
+	auto u = t.swap_rebase(2,4);
+	EXPECT_TRUE(chk(u));
+	EXPECT_TRUE(chk.used_all());
+	u = t.swap_rebase(5, 2);
+	EXPECT_TRUE(chk(u));
+	EXPECT_TRUE(chk.used_all());
+}
 }
 
