@@ -22,6 +22,7 @@
 
 #include <queue>
 #include <set>
+#include <vector>
 
 namespace ptope {
 class PolytopeCheck {
@@ -45,14 +46,48 @@ private:
 		}
 	};
 public:
+	PolytopeCheck();
 	/**
 	 * Check whether a given polytope candidate is actually a compact polytope.
 	 * Returns true if it is a compact polytope.
 	 */
 	bool operator()(const PolytopeCandidate & p);
+	/**
+	 * Continue checking a polytope.
+	 * operator() may return false, that is the polytope is not compact, however
+	 * adding a vector to the polytope may fix the problem. There is no point
+	 * repeating all the work operator() did, so instead this resumes where
+	 * operator() left off with the larger polytope.
+	 */
+	bool resume(const PolytopeCandidate & p);
+	/**
+	 * Returns whether the last checked polytope used all vectors. If not, then
+	 * the polytope may be a polytope, but have uneeded vectors which do not
+	 * appear in the actual polytope.
+	 */
+	bool used_all() const;
+	/**
+	 * Get the last edge considered by the check. If the check returned false,
+	 * then this will be the edge which only has one elliptic vertex.
+	 */
+	const arma::subview_elem2<double, arma::Mat<unsigned long long>,
+			arma::Mat<unsigned long long> >
+	last_edge() const;
 private:
+	const PolytopeCandidate * _last_polytope;
 	std::set<arma::uvec, UVecLess> _visited_vertices;
 	std::queue<Edge> _edge_queue;
+	std::vector<bool> _used_vectors;
+	Edge _last_edge;
+	/**
+	 * Consider the provided edge. Find whether it has a second vertex or not, if
+	 * it does then construct that vertex and if needed add all edges adjacent to
+	 * that vertex to the edge queue.
+	 *
+	 * Return true if the edge has two vertices, false if not.
+	 */
+	bool
+	handle_edge(const Edge & e, const PolytopeCandidate & p);
 	/**
 	 * Find the vertex at the end of an edge. Each edge is constructed from an
 	 * initial vertex, so this finds the other vertex along the edge. If no vertex

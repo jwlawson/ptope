@@ -22,6 +22,8 @@ constexpr double error = 1e-10;
 arma::mat __ellipitic_check_tmp;
 arma::uvec __indices_cached;
 }
+PolytopeCheck::PolytopeCheck()
+	: _last_edge(0, arma::uvec()) {}
 /*
  * The Gram matrix of a polytope contains all the information to determine
  * whether or not it is compact - which is really what this method is checking.
@@ -53,26 +55,60 @@ arma::uvec __indices_cached;
  */
 bool
 PolytopeCheck::operator()(const PolytopeCandidate & p) {
+	_last_polytope = &p;
 	_visited_vertices.clear();
 	while(!_edge_queue.empty()) _edge_queue.pop();
+	_used_vectors.assign(p.gram().n_cols, false);
 
 	const arma::uvec init_v = initial_vertex(p);
 	for(arma::uword i = 0, max = init_v.size(); i < max; ++i) {
+		_used_vectors[init_v(i)] = true;
 		_edge_queue.emplace(init_v(i), construct_edge(init_v, i));
 	}
 	_visited_vertices.emplace(std::move(init_v));
 	while(!_edge_queue.empty()) {
-		const Edge cur_edge = std::move(_edge_queue.front());
+		_last_edge = std::move(_edge_queue.front());
 		_edge_queue.pop();
-		const arma::uword next_vert_ind = find_edge_end(cur_edge, p);
-		if(next_vert_ind == no_vertex) {
-			return false;
-		}
-		const arma::uvec new_vert = get_vertex_from_edge(cur_edge, next_vert_ind);
-		if(vertex_unvisited(new_vert)) {
-			add_edges_from_vertex(new_vert, next_vert_ind);
-			_visited_vertices.emplace(std::move(new_vert));
-		}
+		if(!handle_edge(_last_edge, p) ) return false;
+	}
+	return true;
+}
+bool
+PolytopeCheck::resume(const PolytopeCandidate & p) {
+	_last_polytope = &p;
+
+	if(!handle_edge(_last_edge, p) ) return false;
+
+	while(!_edge_queue.empty()) {
+		_last_edge = std::move(_edge_queue.front());
+		_edge_queue.pop();
+		if(!handle_edge(_last_edge, p) ) return false;
+	}
+	return false;
+}
+bool
+PolytopeCheck::used_all() const {
+	for(const bool & b : _used_vectors) {
+		if(!b) return false;
+	}
+	return true;
+}
+const arma::subview_elem2<double, arma::Mat<unsigned long long>,
+			arma::Mat<unsigned long long> >
+PolytopeCheck::last_edge() const {
+	return _last_polytope->gram().submat(_last_edge.edge, _last_edge.edge);
+}
+bool
+PolytopeCheck::handle_edge(const Edge & e, const PolytopeCandidate & p) {
+	const arma::uword next_vert_ind = find_edge_end(e, p);
+	if(next_vert_ind == no_vertex) {
+		return false;
+	}
+	_used_vectors[next_vert_ind] = true;
+	const arma::uvec new_vert = get_vertex_from_edge(e, next_vert_ind);
+	if(vertex_unvisited(new_vert)) {
+		add_edges_from_vertex(new_vert, next_vert_ind);
+		_visited_vertices.emplace(std::move(new_vert));
 	}
 	return true;
 }
@@ -112,7 +148,7 @@ PolytopeCheck::initial_vertex(const PolytopeCandidate & p) const {
 	for(arma::uword i = 0, max = vf.size();
 			result_ind < last_val && i < max;
 			++i) {
-		arma::vec vector = vf.unsafe_get(i);
+		auto vector = vf.unsafe_get(i);
 		if(vector(last_val) == 0) {
 			result(result_ind) = i;
 			++result_ind;
@@ -154,8 +190,6 @@ PolytopeCheck::get_vertex_from_edge(const Edge & cur_edge,
 	std::sort(new_vert.begin(), new_vert.end());
 	return new_vert;
 }
-/* Uses lambda to check whether two uvecs are equal. Cannot use the 'normal'
- * operator== way as that returns a vector rather than a bool. */
 bool
 PolytopeCheck::vertex_unvisited(const arma::uvec & vertex) const {
 	return _visited_vertices.find(vertex) == _visited_vertices.end();
