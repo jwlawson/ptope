@@ -18,12 +18,14 @@
 
 #include <gtest/gtest.h>
 
+#include "angles.h"
 #include "elliptic_factory.h"
 
 namespace ptope {
 TEST(PolytopeExtender, RealCount2) {
 	PolytopeCandidate p({{ 1, -.5 }, {-.5, 1} });
-	PolytopeExtender ext(p, {2,3});
+	Angles::get().set_angles({2,3});
+	PolytopeExtender ext(p);
 	int count = 0;
 	while(ext.has_next()) {
 		ext.next();
@@ -34,7 +36,8 @@ TEST(PolytopeExtender, RealCount2) {
 }
 TEST(PolytopeExtender, RealCount3) {
 	PolytopeCandidate p({{ 1, -.5, 0 }, {-.5, 1, -.5 }, { 0, -.5, 1 } });
-	PolytopeExtender ext(p, {2,3});
+	Angles::get().set_angles({2,3});
+	PolytopeExtender ext(p);
 	int count = 0;
 	while(ext.has_next()) {
 		ext.next();
@@ -46,7 +49,8 @@ TEST(PolytopeExtender, RealCount3) {
 TEST(PolytopeExtender, HypCount3) {
 	PolytopeCandidate p({{ 1, -.5, 0 }, {-.5, 1, -.5 }, { 0, -.5, 1 } });
 	PolytopeCandidate q = p.extend_by_inner_products({ -.5, -.5, -.5});
-	PolytopeExtender ext(q, {2,3});
+	Angles::get().set_angles({2,3});
+	PolytopeExtender ext(q);
 	int count = 0;
 	while(ext.has_next()) {
 		ext.next();
@@ -57,6 +61,7 @@ TEST(PolytopeExtender, HypCount3) {
 }
 TEST(PolytopeExtender, NoStop) {
 	PolytopeCandidate p(elliptic_factory::type_a(3));
+	Angles::get().set_angles({2, 3, 4, 5, 8});
 	PolytopeExtender ext(p);
 	int count = 0;
 	while(ext.has_next()) {
