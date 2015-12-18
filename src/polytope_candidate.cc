@@ -49,10 +49,8 @@ double eucl_sq_norm(const arma::vec & a) {
  * cache these at a program/global level */
 arma::vec __new_vec_cached;
 arma::vec __null_vec_cached;
-#ifdef VALGRIND_SAFE
 arma::mat __q_cached;
 arma::mat __r_cached;
-#endif
 }
 PolytopeCandidate PolytopeCandidate::InValid;
 PolytopeCandidate::PolytopeCandidate()
@@ -123,14 +121,8 @@ PolytopeCandidate::vector_from_inner_products(const arma::vec & inner_vector)
 		 * which has solution:
 		 * 	l = (-<a,x> + sqrt( <a,x>*<a,x> + <a,a>(<x,x> - 1) ))/<a,a>
 		 */
-#ifdef VALGRIND_SAFE
 		arma::qr(__q_cached, __r_cached, _basis_vecs_trans.t());
 		__null_vec_cached = __q_cached.col(__q_cached.n_cols - 1);
-#else
-		// arma::null was introduced in arma version 5 and not supported by Valgrind
-		// 3.10.1
-		arma::null(__null_vec_cached, _basis_vecs_trans);
-#endif
 		const double ax = mink_inner_prod(__null_vec_cached, __new_vec_cached);
 		const double aa = mink_inner_prod(__null_vec_cached);
 		const double xx = mink_inner_prod(__new_vec_cached);
