@@ -17,54 +17,13 @@
 #include "polytope_extender.h"
 
 namespace ptope {
-namespace {
-std::vector<double> angles_to_prods(const std::vector<uint> & angles) {
-	std::vector<double> result(angles.size());
-	for(std::size_t i = 0, max = angles.size(); i < max; ++i) {
-		if(angles[i] == 2) {
-			result[i] = 0;
-		} else {
-			result[i] = -std::cos(arma::datum::pi/angles[i]);
-		}
-	}
-	return result;
-}
-}
-std::vector<double>
-PolytopeExtender::__default_inner = angles_to_prods({ 2, 3, 4, 5, 8 });
 PolytopeExtender::PolytopeExtender(const PolytopeCandidate & initial_polytope)
 	:	_initial(initial_polytope),
-		_inner_products(__default_inner),
-		_extend_by(_initial.real_dimension()),
-		_progress(_initial.real_dimension()),
-		_progress_max(_inner_products.size() - 1),
-		_has_next(true),
+		_inner_product_vectors(_initial.real_dimension()),
 		_computed_next(false) {}
 PolytopeExtender::PolytopeExtender(PolytopeCandidate && initial_polytope)
 	:	_initial(initial_polytope),
-		_inner_products(__default_inner),
-		_extend_by(_initial.real_dimension()),
-		_progress(_initial.real_dimension()),
-		_progress_max(_inner_products.size() - 1),
-		_has_next(true),
-		_computed_next(false) {}
-PolytopeExtender::PolytopeExtender(const PolytopeCandidate & initial_polytope,
-		const std::vector<uint> & angles)
-	:	_initial(initial_polytope),
-		_inner_products(angles_to_prods(angles)),
-		_extend_by(_initial.real_dimension()),
-		_progress(_initial.real_dimension()),
-		_progress_max(_inner_products.size() - 1),
-		_has_next(true),
-		_computed_next(false) {}
-PolytopeExtender::PolytopeExtender(PolytopeCandidate && initial_polytope,
-		const std::vector<uint> & angles)
-	:	_initial(initial_polytope),
-		_inner_products(angles_to_prods(angles)),
-		_extend_by(_initial.real_dimension()),
-		_progress(_initial.real_dimension()),
-		_progress_max(_inner_products.size() - 1),
-		_has_next(true),
+		_inner_product_vectors(_initial.real_dimension()),
 		_computed_next(false) {}
 /**
  * Check whether a subsequent call to next() will return a valid polytope.
@@ -84,35 +43,12 @@ PolytopeExtender::next(){
 	_computed_next = false;
 	return _next;
 }
-void
-PolytopeExtender::set_default_angles(const std::vector<uint> & angles) {
-	__default_inner = angles_to_prods(angles);
-}
-void
-PolytopeExtender::increment_progress() {
-	bool rollover = true;
-	std::size_t i = 0;
-	const std::size_t max = _progress.size();
-	for(; rollover && i < max; ++i) {
-		rollover = false;
-		if(++_progress[i] > _progress_max) {
-			_progress[i] = 0;
-			rollover = true;
-		}
-	}
-	if(i == max && rollover) {
-		_has_next = false;
-	}
-}
 bool
 PolytopeExtender::compute_next() {
 	bool success = false;
-	while(!success && _has_next) {
-		for(std::size_t i = 0, max = _progress.size(); i < max; ++i) {
-			_extend_by(i) = _inner_products[_progress[i]];
-		}
-		success = _initial.extend_by_inner_products(_next, _extend_by);
-		increment_progress();
+	while(!success && _inner_product_vectors.has_next()) {
+		success = _initial.extend_by_inner_products(_next,
+				_inner_product_vectors.next());
 	}
 	return success;
 }
