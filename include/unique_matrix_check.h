@@ -25,18 +25,20 @@
 #include "polytope_candidate.h"
 
 namespace ptope {
-class UniqueMatrixCheck {
-	typedef std::shared_ptr<const arma::mat> MPtr;
-	typedef std::unordered_set<MPtr, ptope::MEquivHash, ptope::MEquivEqual>
+template<class M>
+class UMC {
+	typedef std::unordered_set<M, ptope::MEquivHash, ptope::MEquivEqual>
 		UniqueMSet;
 public:
 	bool
-	operator()(const MPtr & m);
+	operator()(const M & m);
 	bool
 	operator()(const PolytopeCandidate & p);
 private:
 	UniqueMSet _set;
 };
+typedef UMC<std::shared_ptr<const arma::mat>> UniqueMPtrCheck;
+typedef UMC<const arma::mat> UniqueMatrixCheck;
 }
 #endif
 
