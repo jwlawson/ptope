@@ -39,6 +39,7 @@ Angles::angles_to_prods(const PiSubmultiples & angles) {
 			result[i] = -std::cos(arma::datum::pi/angles[i]);
 		}
 	}
+	std::sort(result.begin(), result.end());
 	return result;
 }
 }

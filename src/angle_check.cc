@@ -29,9 +29,7 @@ struct DLess {
 } __d_less;
 }
 AngleCheck::AngleCheck()
-: _values(Angles::get().inner_products()) {
-	std::sort(_values.begin(), _values.end());
-}
+: _values(Angles::get().inner_products()) {}
 bool
 AngleCheck::operator()(const PolytopeCandidate & p) {
 	return operator()(p.gram());

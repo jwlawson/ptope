@@ -53,7 +53,8 @@ public:
 	Angles & operator=(const Angles &) = delete;
 	Angles & operator=(Angles &&) = delete;
 	/**
-	 * Get default possible inner products.
+	 * Get default possible inner products. This has been sorted, so doesn't need
+	 * to be sorted again.
 	 */
 	const InnerProducts &
 	inner_products() const;
