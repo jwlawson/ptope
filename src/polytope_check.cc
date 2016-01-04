@@ -18,7 +18,7 @@
 
 namespace ptope {
 namespace {
-constexpr double error = 1e-10;
+constexpr double error = 1e-8;
 arma::mat __ellipitic_check_tmp;
 arma::uvec __indices_cached;
 }
@@ -210,8 +210,10 @@ PolytopeCheck::vertex_unvisited(const arma::uvec & vertex) const {
  */
 bool
 PolytopeCheck::is_elliptic(const arma::mat & mat) const {
-	if(arma::det(mat) <= -error) return false;
 	bool success = arma::chol(__ellipitic_check_tmp, mat);
+	for(arma::uword i = 0, max = mat.n_cols; success && i < max; ++i) {
+		if(__ellipitic_check_tmp(i,i) < error) success = false;
+	}
 	return success;
 }
 }

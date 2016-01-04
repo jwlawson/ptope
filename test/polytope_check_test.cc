@@ -74,27 +74,8 @@ TEST(PolytopeCheck, Biggest) {
 
 	s.rebase_vectors({ 0, 1, 2, 8, 3, 4, 5, 6});
 	EXPECT_TRUE(chk(s));
-	/* This fails, however the gram matrix contains a positive entry not equal to
-	 * 1, so is not a valid gram matrix of a hyperbolic coxeter polytope. Note
-	 * that the signature of the gram matrix is still 8,1.
-	auto t = r.extend_by_inner_products({ 0, 0, 0, 0, min_cos_angle(4), 0, 0, 0 });
-	EXPECT_FALSE(chk(t));
-	*/
 }
 TEST(PolytopeCheck, 9dim) {
-	arma::mat a = {
-		{ 1.0000e+00 ,      0e+00 , -8.0902e-01,       0e+00, -5.0000e-01,       0e+00, -8.0902e-01, -8.0902e-01,       0e+00,       0e+00,       0e+00, -5.0000e-01},
-		{       0e+00,  1.0000e+00, -5.0000e-01,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00, -5.0000e-01,       0e+00},
-		{ -8.0902e-01, -5.0000e-01,  1.0000e+00, -5.0000e-01,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00},
-		{       0e+00,       0e+00, -5.0000e-01,  1.0000e+00, -5.0000e-01,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00, -5.0000e-01},
-		{ -5.0000e-01,       0e+00,       0e+00, -5.0000e-01,  1.0000e+00, -5.0000e-01,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00, -8.0902e-01},
-		{       0e+00,       0e+00,       0e+00,       0e+00, -5.0000e-01,  1.0000e+00, -5.0000e-01,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00},
-		{ -8.0902e-01,       0e+00,       0e+00,       0e+00,       0e+00, -5.0000e-01,  1.0000e+00, -5.0000e-01,       0e+00,       0e+00,       0e+00,       0e+00},
-		{ -8.0902e-01,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00, -5.0000e-01,  1.0000e+00, -5.0000e-01,       0e+00,       0e+00,       0e+00},
-		{       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00, -5.0000e-01,  1.0000e+00,       0e+00,       0e+00, -5.0000e-01},
-		{       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,  1.0000e+00, -8.0902e-01,           0},
-		{       0e+00, -5.0000e-01,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00,       0e+00, -8.0902e-01,  1.0000e+00,       0e+00},
-		{ -5.0000e-01,       0e+00,       0e+00, -5.0000e-01, -8.0902e-01,       0e+00,       0e+00,       0e+00, -5.0000e-01,       0e+00,       0e+00,  1.0000e+00} };
 	PolytopeCandidate p(elliptic_factory::type_a(9));
 	PolytopeCheck chk;
 	auto q = p.extend_by_inner_products({ min_cos_angle(5), 0, 0, 0, 0, 0, 0, 0, 0 });
@@ -110,25 +91,30 @@ TEST(PolytopeCheck, 9dim) {
 	auto u = t.extend_by_inner_products({ -.5, 0, 0, -.5, min_cos_angle(5), 0, 0, 0, -.5 });
 	ASSERT_TRUE(u.valid());
 	EXPECT_FALSE(chk(u));
-	
 }
 TEST(PolytopeCheck, Odd4) {
+	PolytopeCheck chk;
 	PolytopeCandidate p(elliptic_factory::type_a(4));
 	auto q = p.extend_by_inner_products({ min_cos_angle(5), -.5, 0, 0});
 	ASSERT_TRUE(q.valid());
+	std::cout << q;
+	EXPECT_FALSE(chk(q));
 	auto r = q.extend_by_inner_products({0, -.5, min_cos_angle(5), -.5 });
 	ASSERT_TRUE(r.valid());
+	std::cout << r;
+	EXPECT_FALSE(chk(r));
 	auto s = r.swap_rebase(3,5);
 	auto t = s.extend_by_inner_products({ 0, -.5, 0, 0 });
+	std::cout << t;
 	ASSERT_TRUE(t.valid());
-	PolytopeCheck chk;
 	EXPECT_TRUE(chk(t));
 	EXPECT_TRUE(chk.used_all());
 	auto u = t.swap_rebase(2,4);
 	EXPECT_TRUE(chk(u));
 	EXPECT_TRUE(chk.used_all());
-	u = t.swap_rebase(5, 2);
-	EXPECT_TRUE(chk(u));
+	auto v = t.swap_rebase(0, 5);
+	std::cout << v;
+	EXPECT_TRUE(chk(v));
 	EXPECT_TRUE(chk.used_all());
 }
 }
