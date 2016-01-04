@@ -38,7 +38,7 @@ private:
 	UniqueMSet _set;
 };
 typedef UMC<std::shared_ptr<const arma::mat>> UniqueMPtrCheck;
-typedef UMC<const arma::mat> UniqueMatrixCheck;
+typedef UMC<arma::mat> UniqueMatrixCheck;
 }
 #endif
 
