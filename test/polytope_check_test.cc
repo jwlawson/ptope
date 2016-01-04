@@ -92,30 +92,27 @@ TEST(PolytopeCheck, 9dim) {
 	ASSERT_TRUE(u.valid());
 	EXPECT_FALSE(chk(u));
 }
+/*
+ * This test looks at a polytope which my algorithm decided was compact when
+ * checked with the rows in a certain order, but not in a different order.
+ */
 TEST(PolytopeCheck, Odd4) {
 	PolytopeCheck chk;
 	PolytopeCandidate p(elliptic_factory::type_a(4));
 	auto q = p.extend_by_inner_products({ min_cos_angle(5), -.5, 0, 0});
 	ASSERT_TRUE(q.valid());
-	std::cout << q;
 	EXPECT_FALSE(chk(q));
 	auto r = q.extend_by_inner_products({0, -.5, min_cos_angle(5), -.5 });
 	ASSERT_TRUE(r.valid());
-	std::cout << r;
 	EXPECT_FALSE(chk(r));
 	auto s = r.swap_rebase(3,5);
 	auto t = s.extend_by_inner_products({ 0, -.5, 0, 0 });
-	std::cout << t;
 	ASSERT_TRUE(t.valid());
-	EXPECT_TRUE(chk(t));
-	EXPECT_TRUE(chk.used_all());
+	EXPECT_FALSE(chk(t));
 	auto u = t.swap_rebase(2,4);
-	EXPECT_TRUE(chk(u));
-	EXPECT_TRUE(chk.used_all());
+	EXPECT_FALSE(chk(u));
 	auto v = t.swap_rebase(0, 5);
-	std::cout << v;
-	EXPECT_TRUE(chk(v));
-	EXPECT_TRUE(chk.used_all());
+	EXPECT_FALSE(chk(v));
 }
 }
 

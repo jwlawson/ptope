@@ -20,6 +20,7 @@
 
 #include "polytope_candidate.h"
 
+#include <algorithm>
 #include <queue>
 #include <set>
 #include <vector>
@@ -38,11 +39,8 @@ private:
 	struct UVecLess {
 		/** true if lhs < rhs, false otherwise. */
 		bool operator()( const arma::uvec & lhs, const arma::uvec & rhs ) const {
-			bool result = true;
-			for(arma::uword i = 0; result && i < lhs.size(); ++i) {
-				result = (lhs(i) < rhs(i));
-			}
-			return result;
+			return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(),
+					rhs.end());
 		}
 	};
 public:
