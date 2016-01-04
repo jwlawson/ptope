@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 /**
- * Functor to check whether a given connected symmetric matrix is parabolic.
+ * Functor to check whether a given connected symmetric matrix contains a
+ * parabolic submatrix including the last row/column.
  *
  * A connected matrix is parabolic if it is positive semi-definite but not
  * positive definite. Equivalently all eigenvalues are non-negative, with at
@@ -29,16 +30,27 @@
 
 namespace ptope {
 class ParabolicCheck {
-	public:
-		ParabolicCheck() {}
-		/**
-		 * Check whether the given symmetric matrix is parabolic.
-		 * Returns true if it is parabolic.
-		 */
-		bool operator()(const arma::mat & m);
-		bool operator()(const PolytopeCandidate & p);
-	private:
-		arma::vec evalues;
+public:
+	ParabolicCheck() {}
+	/**
+	 * Check whether the given symmetric matrix contains a parabolic submatrix
+	 * of the specified dimension including the last column/row.
+	 *
+	 * Returns true if the matrix does contain a parabolic submatrix.
+	 */
+	bool
+	operator()(const arma::mat & m, const arma::uword & dim);
+	bool
+	operator()(const PolytopeCandidate & p);
+private:
+	arma::vec _evalues;
+	/** Checks whether given matrix is parabolic. */
+	bool
+	parabolic(const arma::mat & m);
+	/** Recursively construct submatrices. */
+	bool
+	check_submatrices(arma::uvec & indices, arma::uword index,
+			const arma::mat & m);
 };
 }
 #endif

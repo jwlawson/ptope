@@ -20,23 +20,48 @@ namespace ptope {
 namespace {
 constexpr double error = 1e-10;
 }
-bool ParabolicCheck::operator()(const arma::mat & m) {
-	if(std::abs(arma::det(m)) > error) {
-		return false;
-	}
-	bool got_vals = arma::eig_sym(evalues, m);
-	if(!got_vals) {
-		std::cerr << "Failed to find eigenvalues: " << std::endl << m << std::endl;
-	}
-	bool is_non_negative = true;
-	for(arma::uword i = 0; is_non_negative && i < m.n_rows; ++i) {
-		if (evalues(i) < 0) {
-			is_non_negative = false;
-		}
-	}
-	return is_non_negative;
+bool ParabolicCheck::operator()(const arma::mat & m, const arma::uword & dim) {
+	arma::uvec ind(dim);
+	return check_submatrices(ind, 0, m);
 }
 bool ParabolicCheck::operator()(const PolytopeCandidate & p) {
-	return operator()(p.gram());
+	return operator()(p.gram(), p.real_dimension());
+}
+/*
+ * Currently uses stupid eigendecomposition way of determining whether
+ * parabolic. Should instead use something like Cholesky or LDL.
+ */
+bool
+ParabolicCheck::parabolic(const arma::mat & m) {
+	bool result = true;
+	if(std::abs(arma::det(m)) > error) {
+		result = false;
+	} else {
+		arma::eig_sym(_evalues, m);
+		for(arma::uword i = 0; result && i < m.n_rows; ++i) {
+			if (_evalues(i) < -error) {
+				result = false;
+			}
+		}
+	}
+	return result;
+}
+bool
+ParabolicCheck::check_submatrices(arma::uvec & indices, arma::uword index,
+		const arma::mat & m) {
+	bool result = false;
+	if(index == indices.size() - 1) {
+		/* Have d-1 submatrix, so just add last column */
+		indices(indices.size() - 1) = m.n_cols - 1;
+		result = parabolic(m.submat(indices, indices));
+	} else {
+		/* Keep adding to submatrix */
+		arma::uword min = (index == 0 ? 0 : indices(index - 1) + 1);
+		for(arma::uword k = min, max = m.n_cols - 1; !result && k < max; ++k) {
+			indices(index) = k;
+			result = check_submatrices(indices, index + 1, m);
+		}
+	}
+	return result;
 }
 }

@@ -18,27 +18,40 @@
 
 #include <gtest/gtest.h>
 
+#include "elliptic_factory.h"
+
 namespace ptope {
-TEST(ParabolicCheck, Identity2) {
-	arma::mat a(2,2);
-	a.eye();
-	ParabolicCheck chk;
-	EXPECT_FALSE(chk(a));
+namespace {
+double min_cos_angle(uint mult) {
+	return -std::cos(arma::datum::pi/mult);
 }
-TEST(ParabolicCheck, SmallParabolic) {
-	arma::mat a = { { 1, 0, 0 }, { 0, 2, 0 }, { 0, 0, 0 } };
-	ParabolicCheck chk;
-	EXPECT_TRUE(chk(a));
 }
-TEST(ParabolicCheck, NegEValues) {
-	arma::mat a = { { 1, 2, 1 }, { 2, 1, 4 }, { 1, 4, 2 } };
+TEST(ParabolicCheck, QuasiLanner) {
+	PolytopeCandidate p(elliptic_factory::type_b(4));
 	ParabolicCheck chk;
-	EXPECT_FALSE(chk(a));
+	EXPECT_FALSE(chk(p));
+	auto q = p.extend_by_inner_products({ -.5, 0, 0, -std::sqrt(2)/2 });
+	ASSERT_TRUE(q.valid());
+	EXPECT_TRUE(chk(q));
 }
-TEST(ParabolicCheck, PositiveDefinite) {
-	arma::mat a = { { 4, 1 }, { 1, 2 } };
+/*
+ * The following test looks at the same 4+3 dimensional polytope as the
+ * PolytopeCheck.Odd4 test. Here we see that at no point does this contain any
+ * parabolics.
+ */
+TEST(ParabolicCheck, 4Plus3) {
 	ParabolicCheck chk;
-	EXPECT_FALSE(chk(a));
+	PolytopeCandidate p(elliptic_factory::type_a(4));
+	auto q = p.extend_by_inner_products({ min_cos_angle(5), -.5, 0, 0});
+	ASSERT_TRUE(q.valid());
+	EXPECT_FALSE(chk(q));
+	auto r = q.extend_by_inner_products({0, -.5, min_cos_angle(5), -.5 });
+	ASSERT_TRUE(r.valid());
+	EXPECT_FALSE(chk(r));
+	auto s = r.swap_rebase(3,5);
+	auto t = s.extend_by_inner_products({ 0, -.5, 0, 0 });
+	ASSERT_TRUE(t.valid());
+	EXPECT_FALSE(chk(t));
 }
 }
 
