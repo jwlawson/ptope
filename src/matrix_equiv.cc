@@ -18,7 +18,7 @@
 
 namespace ptope {
 namespace {
-constexpr double error = 1e-15;
+constexpr double error = 1e-10;
 bool
 double_equal(const double & a, const double & b) {
 	return std::abs(a - b) < error;
