@@ -27,19 +27,35 @@ Angles::inner_products() const {
 }
 void
 Angles::set_angles(const PiSubmultiples & angles) {
-	_products = angles_to_prods(angles);
+	auto a = angles_to_prods(angles);
+	_products = std::move(a.first);
+	_multiples = std::move(a.second);
 }
-std::vector<double>
+std::pair<Angles::InnerProducts, Angles::ProdToMultiples>
 Angles::angles_to_prods(const PiSubmultiples & angles) {
-	std::vector<double> result(angles.size());
+	std::pair<InnerProducts, ProdToMultiples> result =
+		std::make_pair(InnerProducts(angles.size()), ProdToMultiples());
 	for(std::size_t i = 0, max = angles.size(); i < max; ++i) {
 		if(angles[i] == 2) {
-			result[i] = 0;
+			result.first[i] = 0;
+			result.second[0.0] = 2;
 		} else {
-			result[i] = -std::cos(arma::datum::pi/angles[i]);
+			result.first[i] = -std::cos(arma::datum::pi/angles[i]);
+			result.second[result.first[i]] = angles[i];
 		}
 	}
-	std::sort(result.begin(), result.end());
+	std::sort(result.first.begin(), result.first.end());
+	return result;
+}
+unsigned int
+Angles::inner_product(const double & d) const {
+	unsigned int result;
+	const auto iter = _multiples.find(d);
+	if(iter != _multiples.end()) {
+		result = (*iter).second;
+	} else {
+		result = 0;
+	}
 	return result;
 }
 }

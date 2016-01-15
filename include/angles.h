@@ -18,6 +18,7 @@
 #ifndef PTOPE_ANGLES_H_
 #define PTOPE_ANGLES_H_
 
+#include <map>
 #include <vector>
 
 namespace ptope {
@@ -28,9 +29,16 @@ namespace ptope {
  * or checking polytope gram matrices.
  */
 class Angles {
+struct DLess {
+static constexpr double error = 10e-8;
+bool operator()(const double & a, const double & b) const {
+	return a + error < b;
+}
+};
 public:
 	typedef std::vector<double> InnerProducts;
 	typedef std::vector<unsigned int> PiSubmultiples;
+	typedef std::map<double, unsigned int, DLess> ProdToMultiples;
 	/**
 	 * Get singleton instance.
 	 */
@@ -43,7 +51,7 @@ public:
 	/**
 	 * Compute inner products from angle submultiples.
 	 */
-	InnerProducts
+	std::pair<InnerProducts, ProdToMultiples>
 	static angles_to_prods(const PiSubmultiples & angles);
 	/**
 	 * Remove any constructors apart form private one.
@@ -63,9 +71,18 @@ public:
 	 */
 	void
 	set_angles(const PiSubmultiples & angles);
+	/**
+	 * Check if given inner product is included in list of products and if so
+	 * return the corresponding angle submultiple.
+	 */
+	unsigned int
+	inner_product(const double & d) const;
 private:
-	Angles() : _products(angles_to_prods({ 2, 3, 4, 5, 8})) {}
+	Angles() 
+	: _products(angles_to_prods({ 2, 3, 4, 5, 8}).first),
+		_multiples(angles_to_prods({2, 3, 4, 5, 8}).second) {}
 	InnerProducts _products;
+	ProdToMultiples _multiples;
 };
 }
 #endif
