@@ -98,7 +98,7 @@ class FilteredPrintIterator {
 			}
 			_next = _it.next();
 			while(_filter(_next) != positive && _it.has_next()) {
-				_os << _next << _os.widen('\n');
+				_next.save(_os);
 				_next = _it.next();
 			}
 		}
