@@ -253,7 +253,7 @@ PolytopeCandidate::real_dimension() const {
 	}
 }
 void
-PolytopeCandidate::save(std::ostream & os) {
+PolytopeCandidate::save(std::ostream & os) const {
 	_gram->save(os, arma::file_type::arma_binary);
 	_vectors.save(os, arma::file_type::arma_binary);
 	os << _hyperbolic << " ";

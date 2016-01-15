@@ -82,7 +82,7 @@ VectorFamily::first_basis_cols() const  {
 	return _vectors.head_cols(size);
 }
 void
-VectorFamily::save(std::ostream & os, arma::file_type type) {
+VectorFamily::save(std::ostream & os, arma::file_type type) const {
 	_vectors.save(os, type);
 }
 void

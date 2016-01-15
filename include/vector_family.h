@@ -113,7 +113,7 @@ class VectorFamily {
 		 * Save the vector family to the stream.
 		 */
 		void
-		save(std::ostream & os, arma::file_type type);
+		save(std::ostream & os, arma::file_type type) const;
 		/**
 		 * Load a saved vector family from stream.
 		 */

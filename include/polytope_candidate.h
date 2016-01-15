@@ -130,7 +130,7 @@ class PolytopeCandidate {
 		 * Save the polytope candidate to stream.
 		 */
 		void
-		save(std::ostream & os);
+		save(std::ostream & os) const;
 		/**
 		 * Read the polytope from stream.
 		 */
