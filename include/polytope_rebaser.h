@@ -22,6 +22,27 @@
 
 namespace ptope {
 class PolytopeRebaser {
+class PermIter {
+public:
+	PermIter(int size, int max);
+	bool
+	has_next();
+	const arma::uvec &
+	next();
+private:
+	arma::uvec _next;
+	std::vector<arma::uword> _progress;
+	const arma::uword _progress_max;
+	const arma::uword _diff;
+	bool _has_next;
+
+	void
+	increment_progress();
+	void
+	increment(const std::size_t & ind);
+	void
+	compute_next();
+};
 public:
 	PolytopeRebaser(const PolytopeCandidate & p);
 	/**
@@ -33,14 +54,12 @@ public:
 	/**
 	 * Return the next rebased polytope.
 	 */
-	PolytopeCandidate
+	const PolytopeCandidate &
 	next();
 private:
 	PolytopeCandidate _initial;
-	arma::uword _basis_ind;
-	const arma::uword _basis_max;
-	arma::uword _swap_ind;
-	const arma::uword _swap_max;
+	PermIter _perm;
+
 };
 }
 #endif

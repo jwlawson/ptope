@@ -114,5 +114,31 @@ TEST(PolytopeCheck, Odd4) {
 	auto v = t.swap_rebase(0, 5);
 	EXPECT_FALSE(chk(v));
 }
+TEST(PolytopeCheck, Unfolded) {
+	PolytopeCheck chk;
+	PolytopeCandidate p(elliptic_factory::type_b(4));
+	auto q = p.extend_by_inner_products({ 0, min_cos_angle(8), 0, 0 });
+	ASSERT_TRUE(q.valid());
+	EXPECT_FALSE(chk(q));
+	auto r = q.extend_by_inner_products({ 0, 0, 0, min_cos_angle(8) });
+	ASSERT_TRUE(r.valid());
+	EXPECT_FALSE(chk(r));
+	auto s = r.swap_rebase(0, 5);
+	auto t = s.extend_by_inner_products({ min_cos_angle(8), 0, -.5, 0 });
+	ASSERT_TRUE(t.valid());
+	EXPECT_FALSE(chk(t));
+
+	auto u = t.swap_rebase(3, 4);
+	auto v = u.extend_by_inner_products({ 0, min_cos_angle(4), 0, 0 });
+	ASSERT_TRUE(v.valid());
+	EXPECT_TRUE(chk(v));
+
+	r.rebase_vectors({ 1, 2, 4, 5 });
+	auto x = r.extend_by_inner_products({ min_cos_angle(4), 0, 0, 0 });
+	ASSERT_TRUE(x.valid());
+	auto y = x.extend_by_inner_products({ 0, -.5, 0, min_cos_angle(8) });
+	ASSERT_TRUE(y.valid());
+	EXPECT_TRUE(chk(v));
+}
 }
 

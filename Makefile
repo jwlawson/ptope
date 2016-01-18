@@ -1,11 +1,11 @@
 NAME = ptope
 MAJOR = 0
-MINOR = 2
+MINOR = 3
 VERSION = $(MAJOR).$(MINOR)
 
 ifeq ($(CXX),g++)
 CXXFLAGS += -Wall -Wextra -march=native
-OPT += -O3 -g
+OPT += -O3
 else
 CXXFLAGS += -Wall -std=c++11 -xHOST
 OPT += -O3 -ipo -no-prec-div

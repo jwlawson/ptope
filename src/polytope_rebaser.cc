@@ -18,22 +18,56 @@
 
 namespace ptope {
 PolytopeRebaser::PolytopeRebaser(const PolytopeCandidate & p)
-	: _initial(p), 
-		_basis_ind(0),
-		_basis_max(p.real_dimension()),
-		_swap_ind(_basis_max),
-		_swap_max(p.gram().n_cols) {}
+	: _initial(p),
+		_perm(p.real_dimension(), p.gram().n_cols) {}
 bool
 PolytopeRebaser::has_next() {
-	return !(_swap_ind == _swap_max && _basis_ind == (_basis_max - 1) );
+	return _perm.has_next();
 }
-PolytopeCandidate
+const PolytopeCandidate &
 PolytopeRebaser::next() {
-	if(_swap_ind == _swap_max) {
-		++_basis_ind;
-		_swap_ind = _basis_max;
+	_initial.rebase_vectors(_perm.next());
+	return _initial;
+}
+PolytopeRebaser::PermIter::PermIter(int size, int max)
+	: _next(size),
+		_progress(size),
+		_progress_max(max),
+		_diff(max - size),
+		_has_next(true) {
+	std::iota(_progress.begin(), _progress.end(), 0);
+}
+bool
+PolytopeRebaser::PermIter::has_next() {
+	return _has_next;
+}
+const arma::uvec &
+PolytopeRebaser::PermIter::next() {
+	compute_next();
+	increment_progress();
+	return _next;
+}
+void
+PolytopeRebaser::PermIter::increment_progress() {
+	const std::size_t last = _progress.size() - 1;
+	increment(last);
+}
+void
+PolytopeRebaser::PermIter::increment(const std::size_t & ind) {
+	if(++_progress[ind] > _diff + ind) {
+		if(ind == 0) {
+			_has_next = false;
+		} else {
+			increment(ind - 1);
+			_progress[ind] = _progress[ind - 1] + 1;
+		}
 	}
-	return _initial.swap_rebase(_basis_ind, _swap_ind++);
+}
+void
+PolytopeRebaser::PermIter::compute_next() {
+	for(std::size_t i = 0, max = _progress.size(); i < max; ++i) {
+		_next(i) = _progress[i];
+	}
 }
 }
 

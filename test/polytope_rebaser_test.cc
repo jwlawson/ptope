@@ -30,12 +30,20 @@ TEST(PolytopeRebaser, Simple) {
 		rebaser.next();
 		++count;
 	}
-	ASSERT_EQ(2, count);
+	ASSERT_EQ(3, count);
 	PolytopeRebaser rebaser2(r);
+	rebaser2.next();
+	ASSERT_TRUE(rebaser2.has_next());
 	arma::mat g1 = rebaser2.next().gram();
+	ASSERT_TRUE(rebaser2.has_next());
 	arma::mat g2 = rebaser2.next().gram();
+	EXPECT_FALSE(rebaser2.has_next());
 
 	arma::mat exp1 = {
+		{ 1.0000, -0.5000, -0.7071 },
+  	{-0.5000,  1.0000, -0.5000 },
+  	{-0.7071, -0.5000,  1.0000 } };
+	arma::mat exp2 = {
 		{ 1.0000,  -0.5000,  -0.5000 },
   	{-0.5000,   1.0000,  -0.7071 },
 		{-0.5000,  -0.7071,   1.0000 } };
@@ -43,10 +51,6 @@ TEST(PolytopeRebaser, Simple) {
 	for(const double & val : diff1) {
 		EXPECT_NEAR(0, val, 1e-4);
 	}
-	arma::mat exp2 = {
-		{ 1.0000, -0.5000, -0.7071 },
-  	{-0.5000,  1.0000, -0.5000 },
-  	{-0.7071, -0.5000,  1.0000 } };
 	arma::mat diff2 = g2 - exp2;
 	for(const double & val : diff2) {
 		EXPECT_NEAR(0, val, 1e-4);
