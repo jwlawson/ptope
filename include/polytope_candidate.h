@@ -27,6 +27,8 @@
 
 #include <memory>
 
+#include "nullspace.h"
+#include "underdetermined_solver.h"
 #include "vector_family.h"
 
 namespace ptope {
@@ -151,6 +153,8 @@ class PolytopeCandidate {
 		operator<<(std::ostream & os, const PolytopeCandidate & poly);
 	private:
 		static PolytopeCandidate InValid;
+		static UDSolver __ud_solver;
+		static Nullspace __nullspace;
 		/** Gram matrix of the polytope. */
 		GramMatrix _gram;
 		/** Set of normal vectors of hyperplanes.

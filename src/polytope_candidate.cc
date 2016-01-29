@@ -25,98 +25,12 @@ constexpr double error = 10e-10;
  * cache these at a program/global level */
 arma::vec __new_vec_cached;
 arma::vec __null_vec_cached;
-arma::mat __qr_matrix;
-arma::mat __solve_a;
-arma::podarray<double> __solve_work;
-arma::podarray<double> __qr_tau;
-arma::podarray<double> __qr_work;
-/* Simplification of arma::solve */
-bool
-solve(const arma::mat & A, const arma::vec & B) {
-	using arma::uword;
-	using arma::blas_int;
-	__solve_a = A;
-	const uword A_n_rows = A.n_rows;
-	const uword A_n_cols = A.n_cols;
-
-	const uword B_n_rows = B.n_rows;
-	const uword B_n_cols = B.n_cols;
-
-	char trans = 'N';
-	blas_int  m     = blas_int(A_n_rows);
-	blas_int  n     = blas_int(A_n_cols);
-	blas_int  lda   = blas_int(A_n_rows);
-	blas_int  ldb   = blas_int(A_n_cols);
-	blas_int  nrhs  = blas_int(B_n_cols);
-	blas_int  lwork = 3 * ( (std::max)(blas_int(1), m + (std::max)(m,nrhs)) );
-	blas_int  info  = 0;
-
-	__new_vec_cached.set_size(A_n_cols, B_n_cols);
-
-	for(uword col=0; col<B_n_cols; ++col) {
-		double* tmp_colmem = __new_vec_cached.colptr(col);
-		arma::arrayops::copy( tmp_colmem, B.colptr(col), B_n_rows );
-		for(uword row=B_n_rows; row<A_n_cols; ++row) {
-			tmp_colmem[row] = double(0);
-		}
-	}
-	__solve_work.set_min_size(static_cast<uword>(lwork));
-
-	arma::lapack::gels<double>( &trans, &m, &n, &nrhs, __solve_a.memptr(), &lda,
-			__new_vec_cached.memptr(), &ldb, __solve_work.memptr(), &lwork, &info );
-
-	return (info == 0);
 }
-/** Simplification of arma::qr. We don't actually care about the result for R,
- * we only want to find the nullspace, so we can throw away a bunch of stuff. */
-bool
-qr_on_trans(const arma::mat & X) {
-	using arma::uword;
-	using arma::blas_int;
-	/* This makes QR too big for just R, but the right size for Q. qeqrf fills QR
-	 * with R in upper triangle and Q encoded in the bottom. orgqr decodes Q into
-	 * the fill Q matrix. By Using the same matrix for everything we avoid having
-	 * to copy all the values between Q and R between the function calls. */
-	__qr_matrix.set_size(X.n_cols, X.n_cols);
-	__qr_matrix.head_cols(X.n_rows) = X.t();
-
-	const uword R_n_rows = __qr_matrix.n_rows;
-	const uword R_n_cols = __qr_matrix.n_cols - 1;
-
-	blas_int m         = static_cast<blas_int>(R_n_rows);
-	blas_int n         = static_cast<blas_int>(R_n_cols);
-	blas_int lwork     = 0;
-	// take into account requirements of geqrf() _and_ orgqr()/ungqr()
-	blas_int lwork_min = (std::max)(blas_int(1), (std::max)(m,n));
-	blas_int k         = (std::min)(m,n);
-	blas_int info      = 0;
-
-	__qr_tau.set_min_size( static_cast<uword>(k) );
-
-	double work_query[2];
-	blas_int lwork_query = -1;
-
-	arma::lapack::geqrf(&m, &n, __qr_matrix.memptr(), &m, __qr_tau.memptr(),
-			&work_query[0], &lwork_query, &info);
-
-	if(info != 0)  { return false; }
-
-	blas_int lwork_proposed = static_cast<blas_int>(
-			arma::access::tmp_real(work_query[0]) );
-	lwork = (std::max)(lwork_proposed, lwork_min);
-	__qr_work.set_min_size( static_cast<uword>(lwork) );
-
-	arma::lapack::geqrf(&m, &n, __qr_matrix.memptr(), &m, __qr_tau.memptr(),
-			__qr_work.memptr(), &lwork, &info);
-
-	if(info != 0)  { return false; }
-
-	arma::lapack::orgqr(&m, &m, &k, __qr_matrix.memptr(), &m, __qr_tau.memptr(),
-			__qr_work.memptr(), &lwork, &info);
-	return (info == 0);
-}
-}
+/* Static private vars */
 PolytopeCandidate PolytopeCandidate::InValid;
+UDSolver PolytopeCandidate::__ud_solver;
+Nullspace PolytopeCandidate::__nullspace;
+
 PolytopeCandidate::PolytopeCandidate()
 : _gram(std::make_shared<arma::mat>()),
 	_vectors(arma::mat()),
@@ -197,7 +111,7 @@ bool
 PolytopeCandidate::vector_from_inner_products(const arma::vec & inner_vector)
 		const {
 	if(_hyperbolic) {
-		solve(_basis_vecs_trans, inner_vector);
+		__ud_solver(__new_vec_cached, _basis_vecs_trans, inner_vector);
 	} else {
 		arma::solve(__new_vec_cached, _basis_vecs_trans, inner_vector);
 	}
@@ -218,8 +132,7 @@ PolytopeCandidate::vector_from_inner_products(const arma::vec & inner_vector)
 		 * which has solution:
 		 * 	l = (-<a,x> + sqrt( <a,x>*<a,x> + <a,a>(<x,x> - 1) ))/<a,a>
 		 */
-		qr_on_trans(_basis_vecs_trans);
-		__null_vec_cached = __qr_matrix.col(__qr_matrix.n_cols - 1);
+		__nullspace(__null_vec_cached, _basis_vecs_trans);
 		const double ax = calc::mink_inner_prod(__null_vec_cached, __new_vec_cached);
 		const double aa = calc::mink_sq_norm(__null_vec_cached);
 		const double xx = calc::mink_sq_norm(__new_vec_cached);
