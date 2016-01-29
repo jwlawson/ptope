@@ -56,22 +56,27 @@ PolytopeCheck::PolytopeCheck()
 bool
 PolytopeCheck::operator()(const PolytopeCandidate & p) {
 	_last_polytope = &p;
-	_visited_vertices.clear();
-	while(!_edge_queue.empty()) _edge_queue.pop();
-	_used_vectors.assign(p.gram().n_cols, false);
 
 	const arma::uvec init_v = initial_vertex(p);
 	for(arma::uword i = 0, max = init_v.size(); i < max; ++i) {
-		_used_vectors[init_v(i)] = true;
 		_edge_queue.emplace(init_v(i), construct_edge(init_v, i));
 	}
 	_visited_vertices.emplace(std::move(init_v));
-	while(!_edge_queue.empty()) {
+	bool result = true;
+	while(result && !_edge_queue.empty()) {
 		_last_edge = std::move(_edge_queue.front());
 		_edge_queue.pop();
-		if(!handle_edge(_last_edge, p) ) return false;
+		if(!handle_edge(_last_edge, p) ) result = false;
 	}
-	return true;
+	/* _last_edge uses memory obtained from the pool. We are about to purge the
+	 * pool, so need to reconstruct _last_edge in different memory. */
+	Edge tmp(_last_edge);
+	_last_edge = std::move(tmp);
+	_visited_vertices.clear();
+	while(!_edge_queue.empty()) _edge_queue.pop();
+	boost::singleton_pool<boost::fast_pool_allocator_tag, sizeof(Edge)>::purge_memory();
+	boost::singleton_pool<boost::fast_pool_allocator_tag, sizeof(arma::uvec)>::purge_memory();
+	return result;
 }
 bool
 PolytopeCheck::resume(const PolytopeCandidate & p) {
@@ -86,13 +91,6 @@ PolytopeCheck::resume(const PolytopeCandidate & p) {
 	}
 	return false;
 }
-bool
-PolytopeCheck::used_all() const {
-	for(const bool & b : _used_vectors) {
-		if(!b) return false;
-	}
-	return true;
-}
 const arma::subview_elem2<double, arma::Mat<unsigned long long>,
 			arma::Mat<unsigned long long> >
 PolytopeCheck::last_edge() const {
@@ -104,7 +102,6 @@ PolytopeCheck::handle_edge(const Edge & e, const PolytopeCandidate & p) {
 	if(next_vert_ind == no_vertex) {
 		return false;
 	}
-	_used_vectors[next_vert_ind] = true;
 	const arma::uvec new_vert = get_vertex_from_edge(e, next_vert_ind);
 	if(vertex_unvisited(new_vert)) {
 		add_edges_from_vertex(new_vert, next_vert_ind);

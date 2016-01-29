@@ -25,6 +25,8 @@
 #include <set>
 #include <vector>
 
+#include "boost/pool/pool_alloc.hpp"
+
 namespace ptope {
 class PolytopeCheck {
 private:
@@ -59,12 +61,6 @@ public:
 	 */
 	bool resume(const PolytopeCandidate & p);
 	/**
-	 * Returns whether the last checked polytope used all vectors. If not, then
-	 * the polytope may be a polytope, but have uneeded vectors which do not
-	 * appear in the actual polytope.
-	 */
-	bool used_all() const;
-	/**
 	 * Get the last edge considered by the check. If the check returned false,
 	 * then this will be the edge which only has one elliptic vertex.
 	 */
@@ -72,10 +68,24 @@ public:
 			arma::Mat<unsigned long long> >
 	last_edge() const;
 private:
+	/** Boost pool allocator for arma::uvec objects. */
+	typedef boost::fast_pool_allocator<arma::uvec,
+					boost::default_user_allocator_new_delete,
+					boost::details::pool::null_mutex> UVecAllocator;
+	/** Set of unique arma::uvec objects. */
+	typedef std::set<arma::uvec, comparator::UVecLess, UVecAllocator> UVecSet;
+	/** Boost pool allocator for Edge objects. */
+	typedef boost::fast_pool_allocator<Edge,
+					boost::default_user_allocator_new_delete,
+					boost::details::pool::null_mutex> EdgeAllocator;
+	/** Container of Edges to store queued Edges. */
+	typedef std::deque<Edge, EdgeAllocator> EdgeContainer;
+	/** Queue of edges. */
+	typedef std::queue<Edge, EdgeContainer> EdgeQueue;
+
 	const PolytopeCandidate * _last_polytope;
-	std::set<arma::uvec, UVecLess> _visited_vertices;
-	std::queue<Edge> _edge_queue;
-	std::vector<bool> _used_vectors;
+	UVecSet _visited_vertices;
+	EdgeQueue _edge_queue;
 	Edge _last_edge;
 	/**
 	 * Consider the provided edge. Find whether it has a second vertex or not, if

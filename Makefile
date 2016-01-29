@@ -1,11 +1,11 @@
 NAME = ptope
 MAJOR = 0
-MINOR = 3
+MINOR = 4
 VERSION = $(MAJOR).$(MINOR)
 
 ifeq ($(CXX),g++)
 CXXFLAGS += -Wall -Wextra -march=native
-OPT += -O3
+OPT += -O3 -g
 else
 CXXFLAGS += -Wall -std=c++11 -xHOST
 OPT += -O3 -ipo -no-prec-div
@@ -59,7 +59,8 @@ LFLAGS = -L$(HOME)/lib -L$(BASE_DIR)/lib
 # define any libraries to link into executable:
 #   if I want to link in libraries (libx.so or libx.a) use -lx
 LIBS = -lopenblas -llapack
-TEST_LIBS = -lgtest -lgtest_main -lopenblas -llapack -pthread
+TEST_LIBS = -lgtest -lgtest_main -lopenblas -llapack -pthread \
+						-lboost_system
 
 # define the C source files
 SRCS = $(wildcard $(SRC_DIR)/*.cc)
