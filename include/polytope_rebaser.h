@@ -58,6 +58,7 @@ public:
 	next();
 private:
 	PolytopeCandidate _initial;
+	PolytopeCandidate _next;
 	PermIter _perm;
 
 };

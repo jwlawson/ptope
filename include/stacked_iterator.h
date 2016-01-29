@@ -26,6 +26,9 @@ class StackedIterator {
 			return _it2.has_next() || _it.has_next();
 		}
 		const Output & next() {
+			/* TODO Here we never check that the newly created iterator actually contains
+			 * anything. It is possible that _it2.has_next would return false
+			 * immediately after construction. */
 			if(!_it2.has_next()) {
 				_it2 = EatIt(_it.next());
 			}

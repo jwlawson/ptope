@@ -20,11 +20,16 @@ namespace ptope {
 PolytopeExtender::PolytopeExtender(const PolytopeCandidate & initial_polytope)
 	:	_initial(initial_polytope),
 		_inner_product_vectors(_initial.real_dimension()),
-		_computed_next(false) {}
+		_computed_next(false) {
+	/* Need this call to ensure that the iterator is initialized properly */
+	has_next();
+}
 PolytopeExtender::PolytopeExtender(PolytopeCandidate && initial_polytope)
 	:	_initial(initial_polytope),
 		_inner_product_vectors(_initial.real_dimension()),
-		_computed_next(false) {}
+		_computed_next(false) {
+	has_next();
+}
 /**
  * Check whether a subsequent call to next() will return a valid polytope.
  */
