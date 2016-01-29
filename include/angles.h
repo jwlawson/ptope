@@ -21,6 +21,8 @@
 #include <map>
 #include <vector>
 
+#include "comparator.h"
+
 namespace ptope {
 /**
  * Don't know if this is the best way of providing config.
@@ -29,16 +31,10 @@ namespace ptope {
  * or checking polytope gram matrices.
  */
 class Angles {
-struct DLess {
-static constexpr double error = 10e-8;
-bool operator()(const double & a, const double & b) const {
-	return a + error < b;
-}
-};
 public:
 	typedef std::vector<double> InnerProducts;
 	typedef std::vector<unsigned int> PiSubmultiples;
-	typedef std::map<double, unsigned int, DLess> ProdToMultiples;
+	typedef std::map<double, unsigned int, comparator::DoubleLess> ProdToMultiples;
 	/**
 	 * Get singleton instance.
 	 */

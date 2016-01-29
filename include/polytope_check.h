@@ -18,6 +18,7 @@
 #ifndef PTOPE_POLYTOPE_CHECK_H_
 #define PTOPE_POLYTOPE_CHECK_H_
 
+#include "comparator.h"
 #include "polytope_candidate.h"
 
 #include <algorithm>
@@ -30,20 +31,16 @@
 namespace ptope {
 class PolytopeCheck {
 private:
+	/** Values to return when no vertex can be found. */
 	static constexpr arma::uword
 	no_vertex = std::numeric_limits<arma::uword>::max();
+	/** Struct containing a vector specifying an edge submatrix and an additional
+	 * value indicating the intial vertex which the edge intersects. */
 	struct Edge {
 		Edge(arma::uword ind, arma::uvec && vec) 
 			: vertex_ind(ind), edge(vec) {}
 		arma::uword vertex_ind;
 		arma::uvec edge;
-	};
-	struct UVecLess {
-		/** true if lhs < rhs, false otherwise. */
-		bool operator()( const arma::uvec & lhs, const arma::uvec & rhs ) const {
-			return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(),
-					rhs.end());
-		}
 	};
 public:
 	PolytopeCheck();
