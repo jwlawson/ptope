@@ -47,6 +47,7 @@ operator()(arma::uvec const * const lhs, arma::uvec const * const rhs) const {
 	return operator()(*lhs, *rhs);
 }
 };
+/** Comparator for arma::vec using lexicographic comparison. */
 struct VecLess {
 bool 
 operator()(arma::vec const & lhs, arma::vec const & rhs) const {

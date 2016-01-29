@@ -27,10 +27,12 @@
 namespace ptope {
 namespace calc {
 double
+inline
 min_cos_angle(unsigned int mult) {
 	return -std::cos(arma::datum::pi / mult);
 }
 double
+inline
 eucl_inner_prod(std::size_t n_elems, double const * const a,
 		double const * const b) {
 	double sq1(0);
@@ -46,15 +48,18 @@ eucl_inner_prod(std::size_t n_elems, double const * const a,
 	return sq1 + sq2;
 }
 double
+inline
 eucl_inner_prod(const arma::vec & a, const arma::vec & b) {
 	return eucl_inner_prod(a.size(), a.memptr(), b.memptr());
 }
 double
+inline
 eucl_sq_norm(const arma::vec & a) {
 	return eucl_inner_prod(a.size(), a.memptr(), a.memptr());
 }
 /** Compute Minkowski/Lorentz inner product of two vectors. */
 double
+inline
 mink_inner_prod(std::size_t n_elems, double const * const a,
 		double const * const b) {
 	const std::size_t max = n_elems - 1;
@@ -63,10 +68,12 @@ mink_inner_prod(std::size_t n_elems, double const * const a,
 	return eucl - m;
 }
 double
+inline
 mink_inner_prod(const arma::vec & a, const arma::vec & b) {
 	return mink_inner_prod(a.size(), a.memptr(), b.memptr());
 }
 double
+inline
 mink_sq_norm(const arma::vec & a) {
 	return mink_inner_prod(a.size(), a.memptr(), a.memptr());
 }
