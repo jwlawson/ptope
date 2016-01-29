@@ -16,35 +16,11 @@
  */
 #include "polytope_candidate.h"
 
+#include "calc.h"
+
 namespace ptope {
 namespace {
-constexpr double error = 1e-14;
-double mink_inner_prod(const arma::vec & a, const arma::vec & b) {
-	double sq = 0;
-	arma::uword max = a.size() - 1;
-	for(arma::uword i = 0; i < max; ++i) {
-		sq += a(i) * b(i);
-	}
-	sq -= a(max) * b(max);
-	return sq;
-}
-double mink_inner_prod(const arma::vec & a) {
-	double sq = 0;
-	arma::uword max = a.size() - 1;
-	for(arma::uword i = 0; i < max; ++i) {
-		sq += a(i) * a(i);
-	}
-	sq -= a(max) * a(max);
-	return sq;
-}
-double eucl_sq_norm(const arma::vec & a) {
-	double sq = 0;
-	arma::uword max = a.size();
-	for(arma::uword i = 0; i < max; ++i) {
-		sq += a(i) * a(i);
-	}
-	return sq;
-}
+constexpr double error = 10e-10;
 /* As the program is never run in parallel with shared resources, we can safely
  * cache these at a program/global level */
 arma::vec __new_vec_cached;
@@ -244,14 +220,14 @@ PolytopeCandidate::vector_from_inner_products(const arma::vec & inner_vector)
 		 */
 		qr_on_trans(_basis_vecs_trans);
 		__null_vec_cached = __qr_matrix.col(__qr_matrix.n_cols - 1);
-		const double ax = mink_inner_prod(__null_vec_cached, __new_vec_cached);
-		const double aa = mink_inner_prod(__null_vec_cached);
-		const double xx = mink_inner_prod(__new_vec_cached);
+		const double ax = calc::mink_inner_prod(__null_vec_cached, __new_vec_cached);
+		const double aa = calc::mink_sq_norm(__null_vec_cached);
+		const double xx = calc::mink_sq_norm(__new_vec_cached);
 		const double l = (-ax + std::sqrt(ax * ax + aa * (1 - xx)) )/aa;
 		__null_vec_cached *= l;
 		__new_vec_cached += __null_vec_cached;
 	} else {
-		const double e_norm = eucl_sq_norm(__new_vec_cached);
+		const double e_norm = calc::eucl_sq_norm(__new_vec_cached);
 		if(e_norm - 1.0 < error) {
 			/* Invalid set of angles. */
 			return false;
@@ -291,13 +267,14 @@ PolytopeCandidate::extend_by_vector(PolytopeCandidate & result,
 	const arma::uword last_col = _gram->n_cols;
 	const arma::uword last_row = _gram->n_rows;
 	for(arma::uword i = 0, max = result._vectors.size() - 1; i < max; ++i) {
-		/* gcc does not automatically cache this column. */
-		const auto & old_vec = result._vectors.unsafe_get(i);
-		const double val = mink_inner_prod(new_vec, old_vec);
+		const double * const old_vec_ptr =
+			result._vectors.underlying_matrix().colptr(i);
+		const double val = calc::mink_inner_prod(new_vec.size(), new_vec.memptr(),
+				old_vec_ptr);
 		result._gram->at(i, last_col) = val;
 		result._gram->at(last_row, i) = val;
 	}
-	result._gram->at(last_row, last_col) = mink_inner_prod(new_vec);
+	result._gram->at(last_row, last_col) = calc::mink_sq_norm(new_vec);
 }
 void
 PolytopeCandidate::rebase_vectors(arma::uvec vec_indices) {
@@ -321,6 +298,10 @@ PolytopeCandidate::swap_rebase(const arma::uword & a,
 	result._basis_vecs_trans.unsafe_col(real_dimension()) *= -1;
 	return result;
 }
+/* Because we force the vectors to live in the space with signature (d,1), the
+ * matrix should always have this signature too. This means this calculation is
+ * generally pointless - but could be useful to check that everything is working
+ * as it should. */
 std::pair<uint,uint>
 PolytopeCandidate::signature() const {
 	arma::vec evalues = arma::eig_sym(*_gram);
