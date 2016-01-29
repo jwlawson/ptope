@@ -51,9 +51,7 @@ VectorFamily::copy_and_add_vector(const VectorFamily & vf,
 	const arma::uword & last_row = vf._vectors.n_rows;
 	_vectors.set_size(last_row, last_col + 1);
 	_vectors.head_cols(last_col) = vf._vectors;
-	for(arma::uword i = 0, max = last_row; i < max; ++i) {
-		_vectors(i, last_col) = vec(i);
-	}
+	_vectors.col(last_col) = vec;
 }
 void
 VectorFamily::copy_and_add_first_hyperbolic_vector(const VectorFamily & vf,

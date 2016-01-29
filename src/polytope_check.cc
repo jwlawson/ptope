@@ -18,9 +18,9 @@
 
 namespace ptope {
 namespace {
-constexpr double error = 1e-8;
-arma::mat __ellipitic_check_tmp;
+arma::mat __elliptic_check_tmp;
 arma::uvec __indices_cached;
+arma::mat __vertex_submat;
 }
 PolytopeCheck::PolytopeCheck()
 	: _last_edge(0, arma::uvec()) {}
@@ -116,15 +116,21 @@ PolytopeCheck::find_edge_end(const Edge & edge,
 	const arma::uword & last_entry = edge.edge.size();
 	const arma::uword & size = last_entry + 1;
 	__indices_cached.set_size(size);
+	__vertex_submat.set_size(size, size);
 	for(arma::uword k = 0; k < last_entry; ++k) {
 		__indices_cached(k) = edge.edge(k);
 	}
+	__vertex_submat.submat(0, 0, last_entry - 1, last_entry - 1) =
+		gram.submat(__indices_cached.head(last_entry),
+				__indices_cached.head(last_entry));
 	for(arma::uword i = 0, max = gram.n_cols; i < max; ++i) {
 		if(i == edge.vertex_ind) continue;
 		if(std::find(edge.edge.begin(), edge.edge.end(), i) == edge.edge.end()) {
+			arma::uvec extra_index = {i};
 			__indices_cached(last_entry) = i;
-			const auto & sub = gram.submat(__indices_cached, __indices_cached);
-			if(is_elliptic(sub)) {
+			__vertex_submat.col(last_entry) = gram.submat(__indices_cached, extra_index);
+			__vertex_submat.row(last_entry) = gram.submat(extra_index, __indices_cached);
+			if(is_elliptic(__vertex_submat)) {
 				return i;
 			}
 		}
@@ -207,11 +213,22 @@ PolytopeCheck::vertex_unvisited(const arma::uvec & vertex) const {
  */
 bool
 PolytopeCheck::is_elliptic(const arma::mat & mat) const {
-	bool success = arma::chol(__ellipitic_check_tmp, mat);
-	for(arma::uword i = 0, max = mat.n_cols; success && i < max; ++i) {
-		if(__ellipitic_check_tmp(i,i) < error) success = false;
-	}
+	bool success = has_chol(mat);
 	return success;
+}
+/* Simplifies what arma::chol computes. The upper triangle of
+ * __elliptic_check_tmp will contain the actual cholesky decomp of mat. The
+ * lower triangle contains junk that would otherwise be set to 0. We don't
+ * actually care about the cholesky result here, just whether it can be
+ * computed. */
+bool
+PolytopeCheck::has_chol(const arma::mat & mat) const {
+	__elliptic_check_tmp = mat;
+	char uplo = 'U';
+	arma::blas_int n = __elliptic_check_tmp.n_rows;
+	arma::blas_int info = 0;
+	arma::lapack::potrf(&uplo, &n, __elliptic_check_tmp.memptr(), &n, &info);
+	return (info == 0);
 }
 }
 

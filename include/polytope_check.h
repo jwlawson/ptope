@@ -139,6 +139,11 @@ private:
 	 */
 	bool
 	is_elliptic(const arma::mat & mat) const;
+	/**
+	 * Check whether the given matrix has a cholesky decomposition.
+	 */
+	bool
+	has_chol(const arma::mat & mat) const;
 };
 }
 #endif
