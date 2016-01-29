@@ -19,6 +19,7 @@
 #include <gtest/gtest.h>
 
 #include "angles.h"
+#include "calc.h"
 #include "elliptic_factory.h"
 
 namespace ptope {
@@ -73,6 +74,18 @@ TEST(PolytopeExtender, NoStop) {
 	EXPECT_FALSE(ext.has_next());
 	EXPECT_FALSE(ext.has_next());
 	EXPECT_FALSE(ext.has_next());
+}
+/* Stacked Iterator assumes that the first call to next will always work, and
+ * does not check has_next. This behaviour is mimicked here. */
+TEST(PolytopeExtender, StackedIterMock) {
+	using ptope::calc::min_cos_angle;
+	Angles::get().set_angles({2, 3, 4, 5, 8, 10});
+	PolytopeCandidate p(elliptic_factory::type_a(4));
+	auto q = p.extend_by_inner_products({ 0, -.5, min_cos_angle(10), min_cos_angle(10) });
+	auto r = q.extend_by_inner_products({ min_cos_angle(10), min_cos_angle(8), 0, 0});
+	r.rebase_vectors({ 0, 1, 2, 5 });
+	PolytopeExtender ext(r);
+	ASSERT_TRUE(ext.next().valid());
 }
 }
 
