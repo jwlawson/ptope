@@ -27,6 +27,10 @@
 namespace ptope {
 namespace calc {
 double
+min_cos_angle(unsigned int mult) {
+	return -std::cos(arma::datum::pi / mult);
+}
+double
 eucl_inner_prod(std::size_t n_elems, double const * const a,
 		double const * const b) {
 	double sq1(0);

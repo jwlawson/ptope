@@ -19,8 +19,8 @@
  * evaluate. For example min_cos_angle and mik_inner_product.
  */
 #pragma once
-#ifndef _PTOPE_CALC_H_
-#define _PTOPE_CALC_H_
+#ifndef _PTOPE_COMPARATOR_H_
+#define _PTOPE_COMPARATOR_H_
 
 #include <armadillo>
 
