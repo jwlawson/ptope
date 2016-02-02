@@ -17,26 +17,16 @@
 #include "unique_matrix_check.h"
 
 namespace ptope {
-template<class M>
 bool
-UMC<M>::operator()(const PolytopeCandidate & /*ignored*/) {
-	return false;
-}
-template<class M>
-bool
-UMC<M>::operator()(const M & m) {
+UniquePCCheck::operator()(const arma::mat & m) {
 	bool result = (_set.find(m) == _set.end());
 	if(result) {
 		_set.insert(m);
 	}
 	return result;
 }
-template<>
-bool UniqueMPtrCheck::operator()(const PolytopeCandidate & p) {
-	return operator()(p.gram_ptr());
-}
-template<>
-bool UniqueMatrixCheck::operator()(const PolytopeCandidate & p) {
-	return operator()(p.gram());
+bool
+UniquePCCheck::operator()(const PolytopeCandidate & p) {
+	return operator()(p.vector_family().underlying_matrix());
 }
 }

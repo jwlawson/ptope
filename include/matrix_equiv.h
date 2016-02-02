@@ -21,6 +21,8 @@
 #include <armadillo>
 #include <memory>
 
+#include "comparator.h"
+
 namespace ptope {
 struct MEquivHash {
 	std::size_t
@@ -43,6 +45,51 @@ struct MEquivEqual {
 		return operator()(*lhs, *rhs);
 	}
 private:
+	/* Cached instances for computations. */
+	mutable std::vector<double> __l_sum;
+	mutable std::vector<double> __r_sum;
+	mutable std::vector<std::vector<arma::uword>> __comp;
+	mutable std::vector<arma::uword> __perm;
+	mutable arma::mat __p_cols;
+	mutable arma::mat __permuted;
+	comparator::DoubleEquals _d_eq;
+	/**
+	 * Get the column sums for the provided matrix.
+	 */
+	void
+	sums(const arma::mat & m, std::vector<double> & result) const;
+	/**
+	 * Find which columns of the matrix can possibly be mapped to which columns in
+	 * the other matrix. Thislimits the possible permutations to check.
+	 */
+	void
+	compatible_vectors(const arma::mat & lhs, const arma::mat & rhs,
+			std::vector<std::vector<arma::uword>> & result) const;
+	/**
+	 * Recursively construct a possible permutation of the vectors and once done
+	 * check whether that permutation takes one vector to the other.
+	 */
+	bool
+	check_permutation(const arma::mat & lhs, const arma::mat & rhs,
+			std::vector<arma::uword> & perm, std::size_t index,
+			const std::vector<std::vector<arma::uword>> & comp) const;
+};
+/* TODO This is essentially the same as MEquivEqual. Merge or get rid of one. */
+struct MColPermEquiv {
+	/**
+	 * Check whether the two provided matrices are the same up to some column
+	 * permutation.
+	 */
+	bool
+	operator()(const arma::mat & lhs, const arma::mat & rhs) const;
+private:
+	/* Cached instances for computations. */
+	mutable std::vector<double> __l_sum;
+	mutable std::vector<double> __r_sum;
+	mutable std::vector<std::vector<arma::uword>> __comp;
+	mutable std::vector<arma::uword> __perm;
+	mutable arma::mat __permuted;
+	comparator::DoubleEquals _d_eq;
 	/**
 	 * Get the column sums for the provided matrix.
 	 */
