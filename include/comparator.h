@@ -61,6 +61,22 @@ operator()(arma::vec const * const lhs, arma::vec const * const rhs) const {
 private:
 DoubleLess _dless;
 };
+/** Hash function for double with error tolerance */
+struct DoubleHash {
+std::size_t
+operator()(const double & d) const {
+	return std::lround( -d * 1e5);
+}
+};
+/** Equals function for doubles with error tolerance. */
+struct DoubleEquals {
+bool
+operator()(const double & lhs, const double & rhs) const {
+	return !_dless(lhs, rhs) && !_dless(rhs, lhs);
+}
+private:
+DoubleLess _dless;
+};
 
 }
 }
