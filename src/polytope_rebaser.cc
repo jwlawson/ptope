@@ -34,10 +34,9 @@ PolytopeRebaser::next() {
 PolytopeRebaser::PermIter::PermIter(int size, int max)
 	: _next(size),
 		_progress(size),
-		_progress_max(max),
-		_diff(max - size),
+		_last_ind(size - 1),
 		_has_next(true) {
-	std::iota(_progress.begin(), _progress.end(), 0);
+	std::iota(_progress.begin(), _progress.end(), max - size);
 }
 bool
 PolytopeRebaser::PermIter::has_next() {
@@ -51,18 +50,19 @@ PolytopeRebaser::PermIter::next() {
 }
 void
 PolytopeRebaser::PermIter::increment_progress() {
-	const std::size_t last = _progress.size() - 1;
-	increment(last);
+	increment(0);
 }
 void
 PolytopeRebaser::PermIter::increment(const std::size_t & ind) {
-	if(++_progress[ind] > _diff + ind) {
-		if(ind == 0) {
+	if(_progress[ind] == ind) {
+		if(ind == _last_ind) {
 			_has_next = false;
 		} else {
-			increment(ind - 1);
-			_progress[ind] = _progress[ind - 1] + 1;
+			increment(ind + 1);
+			_progress[ind] = _progress[ind + 1] - 1;
 		}
+	} else {
+		--_progress[ind];
 	}
 }
 void

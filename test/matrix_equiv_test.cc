@@ -2,15 +2,12 @@
 
 #include <gtest/gtest.h>
 
+#include "calc.h"
 #include "elliptic_factory.h"
 #include "polytope_extender.h"
 
 namespace ptope {
-namespace {
-double min_cos_angle(uint mult) {
-	return -std::cos(arma::datum::pi/mult);
-}
-}
+using ptope::calc::min_cos_angle;
 TEST(MatrixEquiv, Equal) {
 	MEquivEqual eq;
 	arma::mat a = { { 1, 2, 3 }, { 2, 3, 4 }, { 3, 4, 5 } };

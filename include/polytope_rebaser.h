@@ -32,8 +32,7 @@ public:
 private:
 	arma::uvec _next;
 	std::vector<arma::uword> _progress;
-	const arma::uword _progress_max;
-	const arma::uword _diff;
+	const std::size_t _last_ind;
 	bool _has_next;
 
 	void
