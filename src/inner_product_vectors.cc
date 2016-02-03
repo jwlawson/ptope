@@ -24,7 +24,9 @@ InnerProductVectors::InnerProductVectors(int size)
 		_next(size),
 		_progress(size),
 		_progress_max(_inner_products.size() - 1),
-		_has_next(true) {}
+		_has_next(true) {
+	std::reverse(_inner_products.begin(), _inner_products.end());
+}
 bool
 InnerProductVectors::has_next() {
 	return _has_next;

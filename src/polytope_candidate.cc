@@ -24,9 +24,7 @@ constexpr double error = 10e-10;
 /* As the program is never run in parallel with shared resources, we can safely
  * cache these at a program/global level */
 arma::vec __new_vec_cached;
-arma::vec __vec_solution;
 arma::vec __null_vec_cached;
-arma::vec __null_vec_mult;
 }
 /* Static private vars */
 PolytopeCandidate PolytopeCandidate::InValid;
@@ -37,48 +35,42 @@ PolytopeCandidate::PolytopeCandidate()
 	_vectors(arma::mat()),
 	_basis_vecs_trans(),
 	_hyperbolic(false),
-	_valid(false),
-	_extend_again(false) {}
+	_valid(false) {}
 
 PolytopeCandidate::PolytopeCandidate(const PolytopeCandidate & p)
 : _gram(std::make_shared<arma::mat>(*p._gram)),
 	_vectors(p._vectors),
 	_basis_vecs_trans(p._basis_vecs_trans),
 	_hyperbolic(p._hyperbolic),
-	_valid(p._valid),
-	_extend_again(false)  {}
+	_valid(p._valid) {}
 
 PolytopeCandidate::PolytopeCandidate(const GramMatrix & matrix)
 : _gram(matrix),
 	_vectors(arma::chol(*matrix)),
 	_basis_vecs_trans(_vectors.underlying_matrix().t()),
 	_hyperbolic(false),
-	_valid(true),
-	_extend_again(false)  {}
+	_valid(true) {}
 
 PolytopeCandidate::PolytopeCandidate(GramMatrix && matrix)
 : _gram(matrix),
 	_vectors(arma::chol(*_gram)),
 	_basis_vecs_trans(_vectors.underlying_matrix().t()),
 	_hyperbolic(false),
-	_valid(true),
-	_extend_again(false)  {}
+	_valid(true) {}
 
 PolytopeCandidate::PolytopeCandidate(const arma::mat & matrix)
 : _gram(std::make_shared<arma::mat>(matrix)),
 	_vectors(arma::chol(matrix)),
 	_basis_vecs_trans(_vectors.underlying_matrix().t()),
 	_hyperbolic(false),
-	_valid(true),
-	_extend_again(false)  {}
+	_valid(true) {}
 
 PolytopeCandidate::PolytopeCandidate(arma::mat && matrix)
 : _gram(std::make_shared<arma::mat>(matrix)),
 	_vectors(arma::chol(*_gram)),
 	_basis_vecs_trans(_vectors.underlying_matrix().t()),
 	_hyperbolic(false),
-	_valid(true),
-	_extend_again(false)  {}
+	_valid(true) {}
 
 PolytopeCandidate::PolytopeCandidate(const double * gram_ptr, int gram_size,
 		const double * vector_ptr, int vector_dim, int no_vectors)
@@ -86,8 +78,7 @@ PolytopeCandidate::PolytopeCandidate(const double * gram_ptr, int gram_size,
 	_vectors(vector_ptr, vector_dim, no_vectors),
 	_basis_vecs_trans(_vectors.underlying_matrix().t()),
 	_hyperbolic(true),
-	_valid(true),
-	_extend_again(false)  {}
+	_valid(true) {}
 
 PolytopeCandidate::PolytopeCandidate(
 		std::initializer_list<std::initializer_list<double>> l)
@@ -95,8 +86,7 @@ PolytopeCandidate::PolytopeCandidate(
 	_vectors(arma::chol(*_gram)),
 	_basis_vecs_trans(_vectors.underlying_matrix().t()),
 	_hyperbolic(false),
-	_valid(true),
-	_extend_again(false)  {}
+	_valid(true) {}
 
 PolytopeCandidate
 PolytopeCandidate::extend_by_inner_products(const arma::vec & inner_vector) const {
@@ -119,7 +109,7 @@ PolytopeCandidate::extend_by_inner_products(PolytopeCandidate & result,
 bool
 PolytopeCandidate::vector_from_inner_products(const arma::vec & inner_vector) const {
 	if(_hyperbolic) {
-		bool success = __ud_solver(__vec_solution, __null_vec_cached,
+		bool success = __ud_solver(__new_vec_cached, __null_vec_cached,
 				_basis_vecs_trans, inner_vector);
 		if(!success) {
 			return false;

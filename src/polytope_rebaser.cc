@@ -28,7 +28,8 @@ const PolytopeCandidate &
 PolytopeRebaser::next() {
 	/* TODO This writes the memory of _next twice. Should be optimized. */
 	_next = _initial;
-	_next.rebase_vectors(_perm.next());
+	auto & p = _perm.next();
+	_next.rebase_vectors(p);
 	return _next;
 }
 PolytopeRebaser::PermIter::PermIter(int size, int max)

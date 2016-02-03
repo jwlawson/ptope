@@ -20,13 +20,18 @@ namespace ptope {
 std::size_t
 MEquivHash::operator()(const arma::mat & m) const {
 	std::size_t result = 0;
+	std::size_t R = 1779033703;
 	for(arma::uword i = 0, max = m.n_cols; i < max; ++i) {
 		std::size_t c_sum = 0;
+		std::size_t c_sq_sum = 0;
 		for(auto cit = m.begin_col(i), end = m.end_col(i); cit != end; ++cit) {
-			c_sum += std::lround(*cit * 10000);
+			std::size_t val = std::lround(*cit * 10000);
+			c_sum += R + 2*val;
+			c_sq_sum += val * val;
 		}
-		result += c_sum * c_sum;
+		result += c_sum * c_sum + (R + 2*c_sq_sum);
 	}
+	result /= 2;
 	return result;
 }
 bool

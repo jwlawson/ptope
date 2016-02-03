@@ -54,6 +54,12 @@ PolytopeExtender::compute_next() {
 	while(!success && _inner_product_vectors.has_next()) {
 		success = _initial.extend_by_inner_products(_next,
 				_inner_product_vectors.next());
+		/*
+		if(success && n[0] < -0.7 && n[0] > -0.8 && n[1] == 0 && n[2] == 0 && n[3] == 0) {
+			_next.gram().print("Found it:");
+			_next.vector_family().underlying_matrix().print("Vectors:");
+		}
+		*/
 	}
 	return success;
 }

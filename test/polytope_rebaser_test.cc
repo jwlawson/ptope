@@ -32,13 +32,13 @@ TEST(PolytopeRebaser, Simple) {
 	}
 	ASSERT_EQ(3, count);
 	PolytopeRebaser rebaser2(r);
-	/* First one out is the same as initial r */
-	rebaser2.next();
 	ASSERT_TRUE(rebaser2.has_next());
 	ASSERT_TRUE(rebaser2.has_next());
 	arma::mat g1 = rebaser2.next().gram();
 	ASSERT_TRUE(rebaser2.has_next());
 	arma::mat g2 = rebaser2.next().gram();
+	/* Last one out is the same as initial r */
+	rebaser2.next();
 	EXPECT_FALSE(rebaser2.has_next());
 
 	arma::mat exp = {

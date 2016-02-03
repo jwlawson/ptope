@@ -181,7 +181,6 @@ private:
 	bool _hyperbolic;
 	/** Check whether the polytope is valid */
 	bool _valid;
-	mutable bool _extend_again;
 	/**
 	 * Calculate the vector which gives the specified inner products.
 	 * Returns true if the vector is valid, false if it is invalid.

@@ -15,16 +15,16 @@
  * limitations under the License.
  */
 #include "polytope_check.h"
+
+#include "angles.h"
+#include "calc.h"
 #include "elliptic_factory.h"
+#include "parabolic_check.h"
 
 #include <gtest/gtest.h>
 
 namespace ptope {
-namespace {
-double min_cos_angle(uint mult) {
-	return -std::cos(arma::datum::pi/mult);
-}
-}
+using ptope::calc::min_cos_angle;
 TEST(PolytopeCheck, EsselmannExample) {
 	PolytopeCandidate p({ { 1, -.5, 0, 0 }, 
 												{ -.5, 1, min_cos_angle(4), 0 }, 
@@ -55,7 +55,9 @@ TEST(PolytopeCheck, TumarkinExample) {
 			{0, -.5, 1, -.5 },
 			{ 0, 0, -.5, 1 } });
 	auto q = p.extend_by_inner_products({ 0, min_cos_angle(8), 0, 0 });
+	ASSERT_TRUE(q.valid());
 	auto r = q.extend_by_inner_products({ 0, 0, 0, min_cos_angle(8) });
+	ASSERT_TRUE(r.valid());
 	r.rebase_vectors({ 1, 2, 3, 4 });
 	auto s = r.extend_by_inner_products({ 0, 0, min_cos_angle(4), 0 });
 	ASSERT_TRUE(s.valid());
@@ -139,6 +141,28 @@ TEST(PolytopeCheck, Unfolded) {
 	auto y = x.extend_by_inner_products({ 0, -.5, 0, min_cos_angle(8) });
 	ASSERT_TRUE(y.valid());
 	EXPECT_TRUE(chk(v));
+}
+TEST(PolytopeCheck, 4Dim) {
+	PolytopeCheck chk;
+	Angles::get().set_angles({2, 3, 4, 5, 8, 10});
+	PolytopeCandidate p(elliptic_factory::type_b(4));
+	auto q = p.extend_by_inner_products({ 0, min_cos_angle(8), 0, 0 });
+	ASSERT_TRUE(q.valid());
+	ASSERT_FALSE(chk(q));
+	auto r = q.extend_by_inner_products({ 0, 0, 0, min_cos_angle(8) });
+	ASSERT_TRUE(r.valid());
+	ASSERT_FALSE(chk(r));
+
+	PolytopeCandidate copy(r);
+	copy.rebase_vectors({ 1, 2, 4, 5});
+	auto c1 = copy.extend_by_inner_products({ min_cos_angle(4), 0, 0, 0 });
+	ASSERT_TRUE(c1.valid());
+	ASSERT_FALSE(chk(c1));
+	auto c2 = c1.extend_by_inner_products({ 0, -.5, 0, min_cos_angle(8) });
+	ASSERT_TRUE(c2.valid());
+	ParabolicCheck para;
+	EXPECT_FALSE(para(c2));
+	EXPECT_TRUE(chk(c2));
 }
 }
 
