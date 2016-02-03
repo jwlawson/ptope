@@ -112,11 +112,6 @@ PolytopeCandidate::vector_from_inner_products(const arma::vec & inner_vector)
 		const {
 	if(_hyperbolic) {
 		__ud_solver(__new_vec_cached, _basis_vecs_trans, inner_vector);
-	} else {
-		arma::solve(__new_vec_cached, _basis_vecs_trans, inner_vector);
-	}
-	if(_hyperbolic && 
-			std::abs(__new_vec_cached(__new_vec_cached.size() - 1)) > error) {
 		/* 
 		 * Rescale the new vector by adding something from the nullspace, so that
 		 * the norm of the vector is 1.
@@ -132,26 +127,40 @@ PolytopeCandidate::vector_from_inner_products(const arma::vec & inner_vector)
 		 * which has solution:
 		 * 	l = (-<a,x> + sqrt( <a,x>*<a,x> + <a,a>(<x,x> - 1) ))/<a,a>
 		 */
+		const double xx = calc::mink_sq_norm(__new_vec_cached);
+		if(std::abs(xx - 1.0) < error) {
+			/* Lapack solver returns a (Euclidean) unit vector. If the Minkowski norm
+			 * is also 1, then we have constructed a non-hyperbolic vector, which we
+			 * don't want. */
+			return false;
+		}
 		__nullspace(__null_vec_cached, _basis_vecs_trans);
 		const double ax = calc::mink_inner_prod(__null_vec_cached, __new_vec_cached);
 		const double aa = calc::mink_sq_norm(__null_vec_cached);
-		const double xx = calc::mink_sq_norm(__new_vec_cached);
-		const double l = (-ax + std::sqrt(ax * ax + aa * (1 - xx)) )/aa;
+		const double disc = ax * ax + aa * (1.0 - xx);
+		if(disc < 0) {
+			/* If discriminant is zero then no solutions */
+			return false;
+		}
+		double l;
+		if(std::abs(aa + 1) < error) {
+			/* Nullspace is vector (0, 0, 0, ..., 1) */
+			l = (-ax - std::sqrt(disc) )/aa;
+		} else {
+			l = (-ax + std::sqrt(disc) )/aa;
+		}
 		__null_vec_cached *= l;
 		__new_vec_cached += __null_vec_cached;
 	} else {
+		arma::solve(__new_vec_cached, _basis_vecs_trans, inner_vector);
 		const double e_norm = calc::eucl_sq_norm(__new_vec_cached);
 		if(e_norm - 1.0 < error) {
 			/* Invalid set of angles. */
 			return false;
 		}
-		if(_hyperbolic) {
-			__new_vec_cached(__new_vec_cached.size()-1) = std::sqrt(e_norm - 1.0);
-		} else {
-			const arma::uword last_entry = __new_vec_cached.size();
-			__new_vec_cached.insert_rows(last_entry, 1, false);
-			__new_vec_cached(last_entry) = std::sqrt(e_norm - 1.0);
-		}
+		const arma::uword last_entry = __new_vec_cached.size();
+		__new_vec_cached.insert_rows(last_entry, 1, false);
+		__new_vec_cached(last_entry) = std::sqrt(e_norm - 1.0);
 	}
 	return true;
 }
