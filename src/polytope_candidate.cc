@@ -1,5 +1,5 @@
 /*
- * polytope_candidate.h
+ * polytope_candidate.cc
  * Copyright 2015 John Lawson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,54 +24,61 @@ constexpr double error = 10e-10;
 /* As the program is never run in parallel with shared resources, we can safely
  * cache these at a program/global level */
 arma::vec __new_vec_cached;
+arma::vec __vec_solution;
 arma::vec __null_vec_cached;
+arma::vec __null_vec_mult;
 }
 /* Static private vars */
 PolytopeCandidate PolytopeCandidate::InValid;
 UDSolver PolytopeCandidate::__ud_solver;
-Nullspace PolytopeCandidate::__nullspace;
 
 PolytopeCandidate::PolytopeCandidate()
 : _gram(std::make_shared<arma::mat>()),
 	_vectors(arma::mat()),
 	_basis_vecs_trans(),
 	_hyperbolic(false),
-	_valid(false) {}
+	_valid(false),
+	_extend_again(false) {}
 
 PolytopeCandidate::PolytopeCandidate(const PolytopeCandidate & p)
 : _gram(std::make_shared<arma::mat>(*p._gram)),
 	_vectors(p._vectors),
 	_basis_vecs_trans(p._basis_vecs_trans),
 	_hyperbolic(p._hyperbolic),
-	_valid(p._valid) {}
+	_valid(p._valid),
+	_extend_again(false)  {}
 
 PolytopeCandidate::PolytopeCandidate(const GramMatrix & matrix)
 : _gram(matrix),
 	_vectors(arma::chol(*matrix)),
 	_basis_vecs_trans(_vectors.underlying_matrix().t()),
 	_hyperbolic(false),
-	_valid(true) {}
+	_valid(true),
+	_extend_again(false)  {}
 
 PolytopeCandidate::PolytopeCandidate(GramMatrix && matrix)
 : _gram(matrix),
 	_vectors(arma::chol(*_gram)),
 	_basis_vecs_trans(_vectors.underlying_matrix().t()),
 	_hyperbolic(false),
-	_valid(true) {}
+	_valid(true),
+	_extend_again(false)  {}
 
 PolytopeCandidate::PolytopeCandidate(const arma::mat & matrix)
 : _gram(std::make_shared<arma::mat>(matrix)),
 	_vectors(arma::chol(matrix)),
 	_basis_vecs_trans(_vectors.underlying_matrix().t()),
 	_hyperbolic(false),
-	_valid(true) {}
+	_valid(true),
+	_extend_again(false)  {}
 
 PolytopeCandidate::PolytopeCandidate(arma::mat && matrix)
 : _gram(std::make_shared<arma::mat>(matrix)),
 	_vectors(arma::chol(*_gram)),
 	_basis_vecs_trans(_vectors.underlying_matrix().t()),
 	_hyperbolic(false),
-	_valid(true) {}
+	_valid(true),
+	_extend_again(false)  {}
 
 PolytopeCandidate::PolytopeCandidate(const double * gram_ptr, int gram_size,
 		const double * vector_ptr, int vector_dim, int no_vectors)
@@ -79,7 +86,8 @@ PolytopeCandidate::PolytopeCandidate(const double * gram_ptr, int gram_size,
 	_vectors(vector_ptr, vector_dim, no_vectors),
 	_basis_vecs_trans(_vectors.underlying_matrix().t()),
 	_hyperbolic(true),
-	_valid(true) {}
+	_valid(true),
+	_extend_again(false)  {}
 
 PolytopeCandidate::PolytopeCandidate(
 		std::initializer_list<std::initializer_list<double>> l)
@@ -87,7 +95,8 @@ PolytopeCandidate::PolytopeCandidate(
 	_vectors(arma::chol(*_gram)),
 	_basis_vecs_trans(_vectors.underlying_matrix().t()),
 	_hyperbolic(false),
-	_valid(true) {}
+	_valid(true),
+	_extend_again(false)  {}
 
 PolytopeCandidate
 PolytopeCandidate::extend_by_inner_products(const arma::vec & inner_vector) const {
@@ -108,10 +117,13 @@ PolytopeCandidate::extend_by_inner_products(PolytopeCandidate & result,
 	}
 }
 bool
-PolytopeCandidate::vector_from_inner_products(const arma::vec & inner_vector)
-		const {
+PolytopeCandidate::vector_from_inner_products(const arma::vec & inner_vector) const {
 	if(_hyperbolic) {
-		__ud_solver(__new_vec_cached, _basis_vecs_trans, inner_vector);
+		bool success = __ud_solver(__vec_solution, __null_vec_cached,
+				_basis_vecs_trans, inner_vector);
+		if(!success) {
+			return false;
+		}
 		/* 
 		 * Rescale the new vector by adding something from the nullspace, so that
 		 * the norm of the vector is 1.
@@ -120,7 +132,7 @@ PolytopeCandidate::vector_from_inner_products(const arma::vec & inner_vector)
 		 * undefined. This is the nullspace vector n here.
 		 *
 		 * As this is the nullspace, if x is any vector satisfying Ax = b, then
-		 * (x + l*a) will also satisfy the same equation. Hence to fins a unit
+		 * (x + l*a) will also satisfy the same equation. Hence to find a unit
 		 * vector satisfying the equation we need to find l such that (x + l*a) is
 		 * unit, or <x+la, x+la> = 1. This simplifies to a quadratic equation:
 		 * 	1 = <x,x> + 2l<a,x> + l*l<a,a>
@@ -134,7 +146,6 @@ PolytopeCandidate::vector_from_inner_products(const arma::vec & inner_vector)
 			 * don't want. */
 			return false;
 		}
-		__nullspace(__null_vec_cached, _basis_vecs_trans);
 		const double ax = calc::mink_inner_prod(__null_vec_cached, __new_vec_cached);
 		const double aa = calc::mink_sq_norm(__null_vec_cached);
 		const double disc = ax * ax + aa * (1.0 - xx);
