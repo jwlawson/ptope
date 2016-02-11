@@ -29,12 +29,12 @@ namespace ptope {
 template <class It, class Output, class Filter, bool positive>
 class FilteredIterator {
 	public:
-		FilteredIterator(It && it) : _it(it) {
+		FilteredIterator(It && it) : _it(std::move(it)) {
 			get_next();
 		}
 		template <typename ... Args>
 		FilteredIterator(It && it, Args && ... args)
-			: _it(it), _filter(std::forward<Args>(args)...) {
+			: _it(std::move(it)), _filter(std::forward<Args>(args)...) {
 			get_next();
 		}
 		bool has_next() {
@@ -69,12 +69,12 @@ template <class It, class Output, class Filter, bool positive>
 class FilteredPrintIterator {
 	public:
 		FilteredPrintIterator(It && it, std::ostream & os)
-			: _it(it), _os(os) {
+			: _it(std::move(it)), _os(os) {
 			get_next();
 		}
 		template <typename ... Args>
 		FilteredPrintIterator(It && it, std::ostream & os, Args && ... args)
-			: _it(it), _os(os), _filter(std::forward<Args>(args)...) {
+			: _it(std::move(it)), _os(os), _filter(std::forward<Args>(args)...) {
 			get_next();
 		}
 		bool has_next() {

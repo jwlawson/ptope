@@ -17,11 +17,14 @@
 #pragma once
 #ifndef PTOPE_STACKED_ITERATOR_H_
 #define PTOPE_STACKED_ITERATOR_H_
+
+#include <utility>
+
 namespace ptope {
 template <class FeedIt, class EatIt, class Output>
 class StackedIterator {
 	public:
-		StackedIterator(FeedIt && it) : _it(it), _it2(_it.next()) {}
+		StackedIterator(FeedIt && it) : _it(std::move(it)), _it2(_it.next()) {}
 		bool has_next() {
 			return _it2.has_next() || _it.has_next();
 		}
