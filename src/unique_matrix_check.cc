@@ -29,4 +29,17 @@ bool
 UniquePCCheck::operator()(const PolytopeCandidate & p) {
 	return operator()(p.vector_family().underlying_matrix());
 }
+bool
+BloomPCCheck::operator()(const arma::mat & m) {
+	bool not_found = !(_filter.probably_contains(m));
+	if(not_found) {
+		_filter.insert(m);
+	}
+	return not_found;
 }
+bool
+BloomPCCheck::operator()(const PolytopeCandidate & p) {
+	return operator()(p.vector_family().underlying_matrix());
+}
+}
+

@@ -40,7 +40,7 @@ typedef ptope::CombinedCheck2<ptope::AngleCheck, true,
 typedef ptope::FilteredIterator<PCtoL3, ptope::PolytopeCandidate, Check, true> L3F;
 
 typedef ptope::CombinedCheck3<ptope::AngleCheck, true,
-				ptope::DuplicateColumnCheck, false, ptope::UniquePCCheck, true> Check1;
+				ptope::DuplicateColumnCheck, false, ptope::BloomPCCheck, true> Check1;
 typedef ptope::CombinedCheck2<Check1, true, ptope::ParabolicCheck, false> Check2;
 
 typedef ptope::PolytopeExtender L0toL1;
@@ -143,7 +143,8 @@ TEST(ListIterator, Particular) {
 	EXPECT_FALSE(ang < -1);
 	EXPECT_TRUE(ang < 1e-10);
 	const auto & a = Angles::get().inner_products();
-	EXPECT_TRUE(std::binary_search(a.begin(), a.end(), ang));
+	comparator::DoubleLess dless;
+	EXPECT_TRUE(std::binary_search(a.begin(), a.end(), ang, dless));
 	EXPECT_NEAR(0, ang, 1e-10);
 
 	L3F l3 = L3F(PCtoL3(r));

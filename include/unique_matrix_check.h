@@ -21,7 +21,10 @@
 #include <armadillo>
 #include <unordered_set>
 
+#include "boost/bloom_filter/basic_bloom_filter.hpp"
+
 #include "matrix_equiv.h"
+#include "matrix_hash.h"
 #include "polytope_candidate.h"
 
 namespace ptope {
@@ -35,6 +38,23 @@ public:
 	operator()(const PolytopeCandidate & p);
 private:
 	UniqueMSet _set;
+};
+class BloomPCCheck {
+static constexpr std::size_t max_size = std::numeric_limits<std::size_t>::max();
+static constexpr std::size_t default_size = 8589934592ull;
+typedef boost::mpl::vector< ColEquivSumHash,
+														ColEquivProdHash,
+														ColEquivSqSumHash,
+														ColEquivDoublePlusHash > HashVector;
+typedef boost::bloom_filters::basic_bloom_filter<arma::mat, default_size,
+				HashVector> Filter;
+public:
+	bool
+	operator()(const arma::mat & m);
+	bool
+	operator()(const PolytopeCandidate & p);
+private:
+	Filter _filter;
 };
 }
 #endif
