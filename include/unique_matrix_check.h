@@ -29,7 +29,7 @@
 
 namespace ptope {
 class UniquePCCheck {
-	typedef std::unordered_set<arma::mat, ptope::MEquivHash, ptope::MColPermEquiv>
+	typedef std::unordered_set<arma::mat, ptope::MEquivHash, ptope::MEquivEqual>
 		UniqueMSet;
 public:
 	bool

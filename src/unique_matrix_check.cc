@@ -27,7 +27,7 @@ UniquePCCheck::operator()(const arma::mat & m) {
 }
 bool
 UniquePCCheck::operator()(const PolytopeCandidate & p) {
-	return operator()(p.vector_family().underlying_matrix());
+	return operator()(p.gram());
 }
 bool
 BloomPCCheck::operator()(const arma::mat & m) {
