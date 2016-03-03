@@ -66,31 +66,6 @@ VectorFamily::copy_and_add_first_hyperbolic_vector(const VectorFamily & vf,
 		_vectors(i, last_col) = vec(i);
 	}
 }
-arma::vec
-VectorFamily::unsafe_get(const arma::uword index) const {
-	return _vectors.unsafe_col(index);
-}
-arma::vec
-VectorFamily::get(const arma::uword index) const {
-	return _vectors.col(index);
-}
-const arma::mat
-VectorFamily::first_basis_cols() const  {
-	arma::uword size = dimension() - 1;
-	return _vectors.head_cols(size);
-}
-void
-VectorFamily::save(std::ostream & os, arma::file_type type) const {
-	_vectors.save(os, type);
-}
-void
-VectorFamily::load(std::istream & is, arma::file_type type) {
-	_vectors.load(is, type);
-}
-void
-VectorFamily::swap(VectorFamily & vf) {
-	_vectors.swap(vf._vectors);
-}
 }
 
 

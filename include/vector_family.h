@@ -80,6 +80,11 @@ class VectorFamily {
 		arma::vec
 		get(const arma::uword index) const;
 		/**
+		 * Get a pointer to a vector in the family.
+		 */
+		double const *
+		get_ptr(const arma::uword index) const;
+		/**
 		 * Get the dimension of each vector in the family.
 		 */
 		arma::uword
@@ -127,6 +132,42 @@ class VectorFamily {
 	private:
 		arma::mat _vectors;
 };
+inline
+arma::vec
+VectorFamily::unsafe_get(const arma::uword index) const {
+	return _vectors.unsafe_col(index);
+}
+inline
+arma::vec
+VectorFamily::get(const arma::uword index) const {
+	return _vectors.col(index);
+}
+inline
+double const *
+VectorFamily::get_ptr(const arma::uword index) const {
+	return _vectors.colptr(index);
+}
+inline
+const arma::mat
+VectorFamily::first_basis_cols() const  {
+	arma::uword size = dimension() - 1;
+	return _vectors.head_cols(size);
+}
+inline
+void
+VectorFamily::save(std::ostream & os, arma::file_type type) const {
+	_vectors.save(os, type);
+}
+inline
+void
+VectorFamily::load(std::istream & is, arma::file_type type) {
+	_vectors.load(is, type);
+}
+inline
+void
+VectorFamily::swap(VectorFamily & vf) {
+	_vectors.swap(vf._vectors);
+}
 }
 #endif
 
