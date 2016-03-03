@@ -36,21 +36,18 @@ class PolytopeCandidate {
 	static PolytopeCandidate InValid;
 	static UDSolver __ud_solver;
 public:
-	typedef std::shared_ptr<arma::mat> GramMatrix;
+	typedef arma::mat GramMatrix;
 	/**
 	 * Default constructor. No methods will work with an instance created using
 	 * this. Just here for compatability.
 	 */
 	PolytopeCandidate();
-	PolytopeCandidate(const PolytopeCandidate & p);
 	/**
 	 * Create a polytope candidate from an initial Gram matrix. The matrix can
 	 * then be used to construct a set of vectors which form the normal vectors
 	 * of the hyperplanes of the polytope. From there a change of corrdinates to
 	 * the standard (orthonormal) basis is calculated.
 	 */
-	PolytopeCandidate(const GramMatrix & matrix);
-	PolytopeCandidate(GramMatrix && matrix);
 	PolytopeCandidate(const arma::mat & matrix);
 	PolytopeCandidate(arma::mat && matrix);
 	/**
@@ -124,11 +121,7 @@ public:
 	 */
 	const arma::mat &
 	gram() const {
-		return *_gram;
-	}
-	std::shared_ptr<const arma::mat>
-	gram_ptr() const {
-		return static_cast<std::shared_ptr<const arma::mat>>(_gram);
+		return _gram;
 	}
 	/**
 	 * Get a reference to the polytope's vector family.
@@ -152,8 +145,6 @@ public:
 	 */
 	void
 	swap(PolytopeCandidate & p);
-	PolytopeCandidate &
-	operator=(const PolytopeCandidate & p);
 	/**
 	 * Print matrix and vectors to output stream.
 	 */
