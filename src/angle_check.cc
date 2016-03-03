@@ -20,13 +20,7 @@
 
 namespace ptope {
 namespace {
-constexpr double error = 1e-14;
-struct DLess {
-	bool
-	operator()(const double & lhs, const double & rhs) {
-		return (lhs < rhs - error);
-	}
-} __d_less;
+constexpr double error = 1e-10;
 }
 AngleCheck::AngleCheck()
 : _values(Angles::get().inner_products()) {}
@@ -46,7 +40,7 @@ AngleCheck::operator()(const arma::mat & m) {
 		}
 		/* No entries apart from diagonals should be greater than 0 */
 		if(val > error || 
-				!std::binary_search(_values.begin(), _values.end(), val, __d_less)) {
+				!std::binary_search(_values.begin(), _values.end(), val, _dless)) {
 			/* Value not found */
 			result = false;
 		}

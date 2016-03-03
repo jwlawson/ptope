@@ -18,6 +18,7 @@
 #ifndef PTOPE_ANGLE_CHECK_H_
 #define PTOPE_ANGLE_CHECK_H_
 
+#include "comparator.h"
 #include "polytope_candidate.h"
 
 namespace ptope {
@@ -33,6 +34,7 @@ public:
 	bool operator()(const arma::mat & m);
 private:
 	std::vector<double> _values;
+	comparator::DoubleLess _dless;
 };
 }
 #endif
