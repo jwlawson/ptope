@@ -26,15 +26,14 @@ class StackedIterator {
 	public:
 		StackedIterator(FeedIt && it) : _it(std::move(it)), _it2(_it.next()) {}
 		bool has_next() {
-			return _it2.has_next() || _it.has_next();
+			bool result = _it2.has_next();
+			if(!result && _it.has_next()) {
+				_it2 = EatIt(_it.next());
+				result = has_next();
+			}
+			return result;
 		}
 		const Output & next() {
-			/* TODO Here we never check that the newly created iterator actually contains
-			 * anything. It is possible that _it2.has_next would return false
-			 * immediately after construction. */
-			if(!_it2.has_next()) {
-				_it2 = EatIt(_it.next());
-			}
 			return _it2.next();
 		}
 	private:
