@@ -20,13 +20,6 @@ namespace ptope {
 namespace {
 constexpr double error = 1e-10;
 }
-bool ParabolicCheck::operator()(const arma::mat & m, const arma::uword & dim) {
-	arma::uvec ind(dim);
-	return check_submatrices(ind, 0, m);
-}
-bool ParabolicCheck::operator()(const PolytopeCandidate & p) {
-	return operator()(p.gram(), p.real_dimension());
-}
 /*
  * Currently uses stupid eigendecomposition way of determining whether
  * parabolic. Should instead use something like Cholesky or LDL.
@@ -34,7 +27,7 @@ bool ParabolicCheck::operator()(const PolytopeCandidate & p) {
 bool
 ParabolicCheck::parabolic(const arma::mat & m) {
 	bool result = true;
-	if(std::abs(arma::det(m)) > error) {
+	if(std::abs(_det(m)) > error) {
 		result = false;
 	} else {
 		arma::eig_sym(_evalues, m);
@@ -53,7 +46,8 @@ ParabolicCheck::check_submatrices(arma::uvec & indices, arma::uword index,
 	if(index == indices.size() - 1) {
 		/* Have d-1 submatrix, so just add last column */
 		indices(indices.size() - 1) = m.n_cols - 1;
-		result = parabolic(m.submat(indices, indices));
+		_submat_cache = m.submat(indices, indices);
+		result = parabolic(_submat_cache);
 	} else {
 		/* Keep adding to submatrix */
 		arma::uword min = (index == 0 ? 0 : indices(index - 1) + 1);
@@ -63,5 +57,33 @@ ParabolicCheck::check_submatrices(arma::uvec & indices, arma::uword index,
 		}
 	}
 	return result;
+}
+double
+ParabolicCheck::UnsignedDet::operator()(const arma::mat & m) {
+	double val;
+	if(m.n_rows <= 4) {
+		val = arma::auxlib::det_tinymat(m, m.n_rows);
+	} else {
+		_copy = m;
+		_ipiv.set_min_size(_copy.n_rows);
+			
+		arma::blas_int info(0);
+		arma::blas_int n_rows(_copy.n_rows);
+		arma::blas_int n_cols(_copy.n_cols);
+			
+		/* getrf computes LU decomposition. ipiv returns info on any row
+		 * permutations (each of which would switch sign of det) */
+		arma::lapack::getrf(&n_rows, &n_cols, _copy.memptr(), &n_rows,
+				_ipiv.memptr(), &info);
+		if(info > 0) {
+			val = 0;
+		} else {
+			val = _copy.at(0,0);
+			for(arma::uword i=1; i < _copy.n_rows; ++i){
+				val *= _copy.at(i,i);
+			}
+		}
+	}
+	return val;
 }
 }
