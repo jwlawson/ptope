@@ -77,23 +77,6 @@ TEST(PolytopeCheck, Biggest) {
 	s.rebase_vectors({ 0, 1, 2, 8, 3, 4, 5, 6});
 	EXPECT_TRUE(chk(s));
 }
-TEST(PolytopeCheck, 9dim) {
-	PolytopeCandidate p(elliptic_factory::type_a(9));
-	PolytopeCheck chk;
-	auto q = p.extend_by_inner_products({ min_cos_angle(5), 0, 0, 0, 0, 0, 0, 0, 0 });
-	ASSERT_TRUE(q.valid());
-	auto r = q.extend_by_inner_products({0, 0, min_cos_angle(5), 0, -.5, 0, min_cos_angle(5), min_cos_angle(5), 0});
-	ASSERT_TRUE(r.valid());
-	auto s = r.extend_by_inner_products({ 0, 0, 0, -.5, min_cos_angle(5), 0, 0, 0, -.5 });
-	ASSERT_TRUE(s.valid());
-	EXPECT_FALSE(chk(s));
-	auto m = s.swap_rebase(0, 10);
-	EXPECT_FALSE(chk(m));
-	auto t = r.swap_rebase(0, 10);
-	auto u = t.extend_by_inner_products({ -.5, 0, 0, -.5, min_cos_angle(5), 0, 0, 0, -.5 });
-	ASSERT_TRUE(u.valid());
-	EXPECT_FALSE(chk(u));
-}
 /*
  * This test looks at a polytope which my algorithm decided was compact when
  * checked with the rows in a certain order, but not in a different order.

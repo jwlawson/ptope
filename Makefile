@@ -1,6 +1,6 @@
 NAME = ptope
 MAJOR = 0
-MINOR = 4
+MINOR = 5
 VERSION = $(MAJOR).$(MINOR)
 
 ifeq ($(CXX),g++)
@@ -81,14 +81,14 @@ _TEST_OBJS = $(TEST_SRCS:.cc=.o)
 OBJS = $(patsubst $(SRC_DIR)/%,$(OBJ_DIR)/%,$(_OBJS))
 TEST_OBJS = $(patsubst $(TEST_DIR)/%,$(OBJ_DIR)/%,$(_TEST_OBJS))
 
-
+PROF = #-fprofile-use
 
 .PHONY: clean
 
 all:	$(LIB)
 
 $(TEST): $(OBJS) $(TEST_OBJS)
-	$(CXX) $(CXXFLAGS) $(B_OPT) $(INCLUDES) -o $(TEST) $(TEST_OBJS) $(OBJS) $(LFLAGS) $(TEST_LIBS)
+	$(CXX) $(PROF) $(CXXFLAGS) $(B_OPT) $(INCLUDES) -o $(TEST) $(TEST_OBJS) $(OBJS) $(LFLAGS) $(TEST_LIBS)
 
 test: $(TEST)
 	@echo Running tests
@@ -120,10 +120,10 @@ uninstall:
 # (see the gnu make manual section about automatic variables)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cc $(INC_DIR)/%.h
-	$(CXX) $(CXXFLAGS) $(OPT) $(INCLUDES) -c $< -o $@
+	$(CXX) $(PROF) $(CXXFLAGS) $(OPT) $(INCLUDES) -c $< -o $@
 
 $(OBJ_DIR)/%.o: $(TEST_DIR)/%.cc
-	$(CXX) $(CXXFLAGS) $(OPT) $(INCLUDES) -c $< -o $@
+	$(CXX) $(PROF) $(CXXFLAGS) $(OPT) $(INCLUDES) -c $< -o $@
 
 $(OBJS): | $(OBJ_DIR)
 

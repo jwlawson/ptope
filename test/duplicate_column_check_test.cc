@@ -37,16 +37,5 @@ TEST(DuplicateColumnCheck, Bigger) {
 	DuplicateColumnCheck chk;
 	EXPECT_TRUE(chk(a));
 }
-TEST(DuplicateColumnCheck, Polytope) {
-	PolytopeCandidate p(elliptic_factory::type_a(4));
-	auto r = p.extend_by_inner_products({ -.5, 0, -.5, 0 });
-	ASSERT_TRUE(r.valid());
-	auto s = r.extend_by_inner_products({ -.5, 0, -.5, 0 });
-	ASSERT_TRUE(s.valid());
-	DuplicateColumnCheck chk;
-	EXPECT_FALSE(chk(r));
-	EXPECT_TRUE(chk(s));
-
-}
 }
 

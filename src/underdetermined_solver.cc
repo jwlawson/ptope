@@ -34,13 +34,13 @@ UDSolver::operator()(arma::vec & out, arma::vec & nullvec,
 	char ntrans = 'N';
 	char low = 'L';
 	char trans = 'T';
-	blas_int  m     = blas_int(A_n_rows);
-	blas_int  n     = blas_int(A_n_cols);
+	blas_int m(A_n_rows);
+	blas_int n(A_n_cols);
 	/* _a has an extra row to A, so lda = m + 1 = n */
-	blas_int  lda   = blas_int(A_n_cols);
-	blas_int  ldb   = blas_int(A_n_cols);
-	blas_int  nrhs  = 1;
-	blas_int  info  = 0;
+	blas_int lda(A_n_cols);
+	blas_int ldb(A_n_cols);
+	blas_int nrhs(1);
+	blas_int info(0);
 	blas_int k = std::min(m,n);
 	blas_int lwork_min = std::max(blas_int(1), std::max(m,n));
 	double work_query[2];
@@ -81,7 +81,7 @@ UDSolver::operator()(arma::vec & out, arma::vec & nullvec,
 	arma_fortran(arma_dormlq)(&low, &trans, &n, &nrhs, &m, _a.memptr(), &lda,
 			_tau.memptr(), out.memptr(), &ldb, _work.memptr(), &lwork, &info);
 	if(info != 0) return false;
-
+	/* Compute orthogonal matrix from LQ decomp to get nullspace */
 	arma_fortran(dorglq)(&n, &n, &k, _a.memptr(), &n, _tau.memptr(), _work.memptr(),
 			&lwork, &info);
 	if(info != 0) return false;

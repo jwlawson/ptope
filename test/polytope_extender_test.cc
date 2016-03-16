@@ -120,21 +120,24 @@ TEST(ListIterator, Particular) {
 	using ptope::calc::min_cos_angle;
 	Angles::get().set_angles({2, 3, 4, 5, 8, 10});
 	PolytopeCandidate p(elliptic_factory::type_b(4));
-	auto q = p.extend_by_inner_products({ 0, min_cos_angle(8), 0, 0 });
-	auto r = q.extend_by_inner_products({ 0, 0, 0, min_cos_angle(8) });
-	/* Note for some reason extending these the other way round casuses this test
-	 * to fail. *//*
 	auto q = p.extend_by_inner_products({ 0, 0, 0, min_cos_angle(8) });
 	auto r = q.extend_by_inner_products({ 0, min_cos_angle(8), 0, 0 });
-	*/
+
 	ASSERT_TRUE(q.valid());
+	ASSERT_TRUE(r.valid());
 
 	PolytopeCandidate copy(r);
 	copy.rebase_vectors({ 1, 2, 4, 5});
 	PolytopeCandidate c1 = copy.extend_by_inner_products({ min_cos_angle(4), 0, 0, 0 });
 	ASSERT_TRUE(c1.valid());
+	PolytopeCheck pc;
+	EXPECT_FALSE(pc(c1));
+	DuplicateColumnCheck dc;
+	EXPECT_FALSE(dc(c1));
+	AngleCheck ac;
+	EXPECT_TRUE(ac(c1));
 
-	PolytopeCandidate c2 = copy.extend_by_inner_products({ 0, -.5, 0, min_cos_angle(8) });
+	PolytopeCandidate c2 = copy.extend_by_inner_products({ 0, -.5, min_cos_angle(8), 0 });
 	ASSERT_TRUE(c2.valid());
 
 	arma::vec v1 = c1.vector_family().get(6);
@@ -150,7 +153,9 @@ TEST(ListIterator, Particular) {
 	L3F l3 = L3F(PCtoL3(r));
 	std::set<arma::vec, comparator::VecLess> vecset;
 	while(l3.has_next()) {
-		vecset.insert(l3.next().vector_family().get(6));
+		auto & n = l3.next();
+		auto v = n.vector_family().get(6);
+		vecset.insert(v);
 	}
 	EXPECT_TRUE(vecset.find(v1) != vecset.end());
 	EXPECT_TRUE(vecset.find(v2) != vecset.end());

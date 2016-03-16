@@ -50,12 +50,14 @@ eucl_inner_prod(std::size_t n_elems, double const * const a,
 double
 inline
 eucl_inner_prod(const arma::vec & a, const arma::vec & b) {
-	return eucl_inner_prod(a.size(), a.memptr(), b.memptr());
+	return std::inner_product(a.begin(), a.end(), b.begin(),
+			static_cast<double>(0));
 }
 double
 inline
 eucl_sq_norm(const arma::vec & a) {
-	return eucl_inner_prod(a.size(), a.memptr(), a.memptr());
+	return std::inner_product(a.begin(), a.end(), a.begin(),
+			static_cast<double>(0));
 }
 /** Compute Minkowski/Lorentz inner product of two vectors. */
 double
@@ -70,12 +72,20 @@ mink_inner_prod(std::size_t n_elems, double const * const a,
 double
 inline
 mink_inner_prod(const arma::vec & a, const arma::vec & b) {
-	return mink_inner_prod(a.size(), a.memptr(), b.memptr());
+	const std::size_t max = a.size() - 1;
+	double eucl = std::inner_product(a.begin(), a.end() - 1, b.begin(),
+			static_cast<double>(0));
+	double m = a[max] * b[max];
+	return eucl - m;
 }
 double
 inline
 mink_sq_norm(const arma::vec & a) {
-	return mink_inner_prod(a.size(), a.memptr(), a.memptr());
+	const std::size_t max = a.size() - 1;
+	double eucl = std::inner_product(a.begin(), a.end() - 1, a.begin(),
+			static_cast<double>(0));
+	double m = a[max] * a[max];
+	return eucl - m;
 }
 
 }
