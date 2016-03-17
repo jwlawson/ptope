@@ -37,6 +37,14 @@ PolytopeCandidate::PolytopeCandidate()
 	_hyperbolic(false),
 	_valid(false) {}
 
+PolytopeCandidate::PolytopeCandidate(const PolytopeCandidate & p)
+: _gram(p._gram),
+	_vectors(p._vectors),
+	_basis_vecs_trans(p._basis_vecs_trans),
+	_hyperbolic(p._hyperbolic),
+	_valid(p._valid),
+	_lq_info(p._lq_info ? new detail::LQInfo(*p._lq_info) : nullptr) {}
+
 PolytopeCandidate::PolytopeCandidate(const arma::mat & matrix)
 : _gram(matrix),
 	_vectors(arma::chol(matrix)),
@@ -88,8 +96,11 @@ PolytopeCandidate::extend_by_inner_products(PolytopeCandidate & result,
 bool
 PolytopeCandidate::vector_from_inner_products(const arma::vec & inner_vector) const {
 	if(_hyperbolic) {
+		if(!_lq_info) {
+			_lq_info = std::move(detail::LQInfo::compute(_basis_vecs_trans));
+		}
 		bool success = __ud_solver(__new_vec_cached, __null_vec_cached,
-				_basis_vecs_trans, inner_vector);
+				*_lq_info, inner_vector);
 		if(!success) {
 			return false;
 		}
@@ -275,12 +286,25 @@ PolytopeCandidate::swap(PolytopeCandidate & p) {
 	_basis_vecs_trans.swap(p._basis_vecs_trans);
 	std::swap(_hyperbolic, p._hyperbolic);
 	std::swap(_valid, p._valid);
+	std::swap(_lq_info, p._lq_info);
 }
 std::ostream &
 operator<<(std::ostream & os, const PolytopeCandidate & poly) {
 	poly._gram.print(os, "Gram:");
 	poly._vectors.underlying_matrix().print(os, "Vectors:");
 	return os;
+}
+PolytopeCandidate &
+PolytopeCandidate::operator=(const PolytopeCandidate & p) {
+	_gram = p._gram;
+	_vectors = p._vectors;
+	_basis_vecs_trans = p._basis_vecs_trans;
+	_hyperbolic = p._hyperbolic;
+	_valid = p._valid;
+	/* TODO Check if this is best way of handling assignment of LQ.
+	 * Depends when LQ info is computed and when it's needed. */
+	_lq_info.release();
+	return *this;
 }
 }
 

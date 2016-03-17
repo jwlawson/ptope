@@ -22,26 +22,23 @@ namespace ptope {
 /* Simplification of arma::solve */
 bool
 UDSolver::operator()(arma::vec & out, arma::vec & nullvec,
-		const arma::mat & A, const arma::vec & B) {
+		detail::LQInfo & lqi, const arma::vec & B) {
 	using arma::uword;
 	using arma::blas_int;
+	const arma::mat & A = lqi.lq();
 	const uword A_n_rows = A.n_rows;
 	const uword A_n_cols = A.n_cols;
 	const uword B_n_rows = B.n_rows;
-	_a.set_size(A_n_cols, A_n_cols);
-	_a.submat(0, 0, A_n_rows - 1, A_n_cols - 1) = A;
 
 	char ntrans = 'N';
 	char low = 'L';
 	char trans = 'T';
 	blas_int m(A_n_rows);
 	blas_int n(A_n_cols);
-	/* _a has an extra row to A, so lda = m + 1 = n */
-	blas_int lda(A_n_cols);
+	blas_int lda(A_n_rows);
 	blas_int ldb(A_n_cols);
 	blas_int nrhs(1);
 	blas_int info(0);
-	blas_int k = std::min(m,n);
 	blas_int lwork_min = std::max(blas_int(1), std::max(m,n));
 	double work_query[2];
 	blas_int lwork_query(-1);
@@ -53,11 +50,10 @@ UDSolver::operator()(arma::vec & out, arma::vec & nullvec,
 	for(uword row=B_n_rows; row<A_n_cols; ++row) {
 		sol_ptr[row] = double(0);
 	}
-	_tau.set_min_size(static_cast<uword>(k));
 
-	/* Find the optimum work space size for computing LQ */
-	arma_fortran(dgelqf)(&m, &n, _a.memptr(), &lda, _tau.memptr(), &work_query[0],
-			&lwork_query, &info);
+	/* Find the optimum work space size for computing solution */
+	arma_fortran(arma_dormlq)(&low, &trans, &n, &nrhs, &m, lqi.lq_ptr(), &lda,
+			lqi.tau_ptr(), out.memptr(), &ldb, &work_query[0], &lwork_query, &info);
 	if(info != 0) return false;
 
 	blas_int lwork_proposed = static_cast<blas_int>(
@@ -65,29 +61,20 @@ UDSolver::operator()(arma::vec & out, arma::vec & nullvec,
 	blas_int lwork = (std::max)(lwork_proposed, lwork_min);
 	_work.set_min_size( static_cast<uword>(lwork) );
 
-	/* Compute LQ decomposition of A */
-	arma_fortran(dgelqf)(&m, &n, _a.memptr(), &lda, _tau.memptr(), _work.memptr(),
-			&lwork, &info);
-	if(info != 0) return false;
-
 	/* Solve triangular system of equations */
-	arma::dtrtrs_(&low, &ntrans, &ntrans, &m, &nrhs, _a.memptr(), &lda,
+	arma::dtrtrs_(&low, &ntrans, &ntrans, &m, &nrhs, lqi.lq_ptr(), &lda,
 				out.memptr(), &ldb, &info);
 	if(info != 0) return false;
 	for(int i = m; i < n; ++i) {
 		out(i) = 0;
 	}
 	/* Change basis usig orthogonal part of A */
-	arma_fortran(arma_dormlq)(&low, &trans, &n, &nrhs, &m, _a.memptr(), &lda,
-			_tau.memptr(), out.memptr(), &ldb, _work.memptr(), &lwork, &info);
-	if(info != 0) return false;
-	/* Compute orthogonal matrix from LQ decomp to get nullspace */
-	arma_fortran(dorglq)(&n, &n, &k, _a.memptr(), &n, _tau.memptr(), _work.memptr(),
-			&lwork, &info);
+	arma_fortran(arma_dormlq)(&low, &trans, &n, &nrhs, &m, lqi.lq_ptr(), &lda,
+			lqi.tau_ptr(), out.memptr(), &ldb, _work.memptr(), &lwork, &info);
 	if(info != 0) return false;
 
 	/* Write nullspace to output. */
-	nullvec = _a.row(A_n_rows).t();
+	nullvec = lqi.null();
 
 	return (info == 0);
 }

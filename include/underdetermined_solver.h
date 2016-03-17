@@ -20,6 +20,8 @@
 
 #include <armadillo>
 
+#include "lq_info.h"
+
 namespace ptope {
 /** 
  * Solve an underdetermined system of linear equations, using BLAS/LAPACK dgels.
@@ -28,14 +30,9 @@ struct UDSolver {
 public:
 	bool
 	operator()(arma::vec & out, arma::vec & nullvec,
-			const arma::mat & A, const arma::vec & B);
+			detail::LQInfo & lqi, const arma::vec & B);
 private:
-	arma::mat _a;
 	arma::podarray<double> _work;
-	/** Cached tau work array for finding LQ.
-	 * TODO Could be incorporated into _work, so that the two work arrays are
-	 * always next to each other (hence cached properly) */
-	arma::podarray<double> _tau;
 };
 }
 

@@ -112,40 +112,26 @@ LQInfo::null() const {
 #endif
 extern "C" {
 /* Compute LQ decomposition of matrix. */
-	void arma_fortran(dgelqf)(
-		arma::blas_int* m,
-		arma::blas_int* n,
-		double* a,
-		arma::blas_int* lda,
-		double* tau,
-		double* work,
-		arma::blas_int*	lwork,
-		arma::blas_int* info);
+void arma_fortran(dgelqf)(
+	arma::blas_int* m,
+	arma::blas_int* n,
+	double* a,
+	arma::blas_int* lda,
+	double* tau,
+	double* work,
+	arma::blas_int*	lwork,
+	arma::blas_int* info);
 /* Find Q from the LQ decom given by dgelqf */
-	void arma_fortran(dorglq)(
-		arma::blas_int* m,
-		arma::blas_int* n,
-		arma::blas_int* k,
-		double* a,
-		arma::blas_int* lda,
-		double* tau,
-		double* work,
-		arma::blas_int* lwork,
-		arma::blas_int* info);
-	void arma_fortran(arma_dormlq)(
-		char* side,
-		char* trans,
-		arma::blas_int* m,
-		arma::blas_int* n,
-		arma::blas_int* k,
-		double* a,
-		arma::blas_int* lda,
-		double* tau,
-		double* c,
-		arma::blas_int* ldc,
-		double* work,
-		arma::blas_int* lwork,
-		arma::blas_int* info);
+void arma_fortran(dorglq)(
+	arma::blas_int* m,
+	arma::blas_int* n,
+	arma::blas_int* k,
+	double* a,
+	arma::blas_int* lda,
+	double* tau,
+	double* work,
+	arma::blas_int* lwork,
+	arma::blas_int* info);
 }
 }
 }

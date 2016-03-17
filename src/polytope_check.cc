@@ -21,6 +21,7 @@ namespace {
 arma::mat __elliptic_check_tmp;
 arma::uvec __indices_cached;
 arma::mat __vertex_submat;
+arma::uvec __extra_vertex(1);
 }
 PolytopeCheck::PolytopeCheck()
 	: _last_edge(0, arma::uvec()) {}
@@ -126,10 +127,10 @@ PolytopeCheck::find_edge_end(const Edge & edge,
 	for(arma::uword i = 0, max = gram.n_cols; i < max; ++i) {
 		if(i == edge.vertex_ind) continue;
 		if(std::find(edge.edge.begin(), edge.edge.end(), i) == edge.edge.end()) {
-			arma::uvec extra_index = {i};
+			__extra_vertex(0) = i;
 			__indices_cached(last_entry) = i;
-			__vertex_submat.col(last_entry) = gram.submat(__indices_cached, extra_index);
-			__vertex_submat.row(last_entry) = gram.submat(extra_index, __indices_cached);
+			__vertex_submat.col(last_entry) = gram.submat(__indices_cached, __extra_vertex);
+			__vertex_submat.row(last_entry) = gram.submat(__extra_vertex, __indices_cached);
 			if(is_elliptic(__vertex_submat)) {
 				return i;
 			}

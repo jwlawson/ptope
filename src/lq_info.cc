@@ -31,12 +31,12 @@ LQInfo::compute(arma::mat const & A) {
 	using arma::blas_int;
 	const uword A_n_rows = A.n_rows;
 	const uword A_n_cols = A.n_cols;
-	__lq_cache.set_size(A_n_cols, A_n_cols);
-	__lq_cache.submat(0, 0, A_n_rows - 1, A_n_cols - 1) = A;
+	__orthog_cache.set_size(A_n_cols, A_n_cols);
+	__orthog_cache.submat(0, 0, A_n_rows - 1, A_n_cols - 1) = A;
 
 	blas_int m(A_n_rows);
 	blas_int n(A_n_cols);
-	/* _a has an extra row to A, so lda = m + 1 = n */
+	/* _lq_cache has an extra row to A, so lda = m + 1 = n */
 	blas_int lda(A_n_cols);
 	blas_int info(0);
 	blas_int k = std::min(m,n);
@@ -47,7 +47,7 @@ LQInfo::compute(arma::mat const & A) {
 	__tau.set_min_size(static_cast<uword>(k));
 
 	/* Find the optimum work space size for computing LQ */
-	arma_fortran(dgelqf)(&m, &n, __lq_cache.memptr(), &lda, __tau.memptr(),
+	arma_fortran(dgelqf)(&m, &n, __orthog_cache.memptr(), &lda, __tau.memptr(),
 			&work_query[0], &lwork_query, &info);
 
 	blas_int lwork_proposed = static_cast<blas_int>(
@@ -56,17 +56,19 @@ LQInfo::compute(arma::mat const & A) {
 	__work.set_min_size( static_cast<uword>(lwork) );
 
 	/* Compute LQ decomposition of A */
-	arma_fortran(dgelqf)(&m, &n, __lq_cache.memptr(), &lda, __tau.memptr(),
+	arma_fortran(dgelqf)(&m, &n, __orthog_cache.memptr(), &lda, __tau.memptr(),
 			__work.memptr(), &lwork, &info);
-	__orthog_cache = __lq_cache;
+	__lq_cache.set_size(A_n_rows, A_n_cols);
+	__lq_cache = __orthog_cache.head_rows(A_n_rows);
 	/* Compute orthogonal matrix from LQ decomp to get nullspace */
 	arma_fortran(dorglq)(&n, &n, &k, __orthog_cache.memptr(), &n, __tau.memptr(),
-			__work.memptr(),
-			&lwork, &info);
+			__work.memptr(), &lwork, &info);
 
 	/* Write nullspace to output. */
 	__nullvec = __orthog_cache.row(A_n_rows).t();
-	return std::unique_ptr<LQInfo>(new LQInfo(__lq_cache, __tau, __nullvec));
+	
+	return std::move(std::unique_ptr<LQInfo>(new LQInfo(__lq_cache, __tau,
+					__nullvec)));
 }
 LQInfo::LQInfo(arma::mat const & lq, arma::podarray<double> const & tau,
 		arma::vec const & null)

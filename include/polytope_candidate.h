@@ -27,6 +27,7 @@
 
 #include <memory>
 
+#include "lq_info.h"
 #include "nullspace.h"
 #include "underdetermined_solver.h"
 #include "vector_family.h"
@@ -42,6 +43,11 @@ public:
 	 * this. Just here for compatability.
 	 */
 	PolytopeCandidate();
+	/**
+	 * Copy constructor needed to deal with unique_ptr
+	 */
+	PolytopeCandidate(const PolytopeCandidate & p);
+	PolytopeCandidate(PolytopeCandidate &&) = default;
 	/**
 	 * Create a polytope candidate from an initial Gram matrix. The matrix can
 	 * then be used to construct a set of vectors which form the normal vectors
@@ -151,6 +157,13 @@ public:
 	friend
 	std::ostream &
 	operator<<(std::ostream & os, const PolytopeCandidate & poly);
+	/**
+	 * Assignment operator overload needed to handle uniqpe_ptr
+	 */
+	PolytopeCandidate &
+	operator=(const PolytopeCandidate & p);
+	PolytopeCandidate &
+	operator=(PolytopeCandidate &&) = default;
 private:
 	/** Gram matrix of the polytope. */
 	GramMatrix _gram;
@@ -172,6 +185,9 @@ private:
 	bool _hyperbolic;
 	/** Check whether the polytope is valid */
 	bool _valid;
+	/** LQ decomposition of basis vector matrix. */
+	mutable
+	std::unique_ptr<detail::LQInfo> _lq_info;
 	/**
 	 * Calculate the vector which gives the specified inner products.
 	 * Returns true if the vector is valid, false if it is invalid.
