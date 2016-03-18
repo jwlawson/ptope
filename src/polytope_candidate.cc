@@ -28,7 +28,6 @@ arma::vec __null_vec_cached;
 }
 /* Static private vars */
 PolytopeCandidate PolytopeCandidate::InValid;
-UDSolver PolytopeCandidate::__ud_solver;
 
 PolytopeCandidate::PolytopeCandidate()
 : _gram(),
@@ -99,11 +98,8 @@ PolytopeCandidate::vector_from_inner_products(const arma::vec & inner_vector) co
 		if(!_lq_info) {
 			_lq_info = std::move(detail::LQInfo::compute(_basis_vecs_trans));
 		}
-		bool success = __ud_solver(__new_vec_cached, __null_vec_cached,
-				*_lq_info, inner_vector);
-		if(!success) {
-			return false;
-		}
+		__null_vec_cached = _lq_info->null();
+		__new_vec_cached = _lq_info->qtli() * inner_vector;
 		/* 
 		 * Rescale the new vector by adding something from the nullspace, so that
 		 * the norm of the vector is 1.

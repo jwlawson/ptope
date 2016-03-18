@@ -7,8 +7,8 @@ ifeq ($(CXX),g++)
 CXXFLAGS += -Wall -Wextra -march=native
 OPT += -O3 -g
 else
-CXXFLAGS += -Wall -std=c++11 -xHOST
-OPT += -O3 -ipo -no-prec-div
+CXXFLAGS += -Wall -xHOST
+OPT += -O3 -ipo
 B_OPT += $(OPT)
 AR = xiar
 endif

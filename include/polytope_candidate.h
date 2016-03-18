@@ -28,14 +28,11 @@
 #include <memory>
 
 #include "lq_info.h"
-#include "nullspace.h"
-#include "underdetermined_solver.h"
 #include "vector_family.h"
 
 namespace ptope {
 class PolytopeCandidate {
 	static PolytopeCandidate InValid;
-	static UDSolver __ud_solver;
 public:
 	typedef arma::mat GramMatrix;
 	/**

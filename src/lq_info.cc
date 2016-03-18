@@ -19,7 +19,7 @@
 namespace ptope {
 namespace detail {
 namespace {
-arma::mat __lq_cache;
+arma::mat __li_cache;
 arma::mat __orthog_cache;
 arma::podarray<double> __work;
 arma::podarray<double> __tau;
@@ -31,6 +31,7 @@ LQInfo::compute(arma::mat const & A) {
 	using arma::blas_int;
 	const uword A_n_rows = A.n_rows;
 	const uword A_n_cols = A.n_cols;
+	std::unique_ptr<LQInfo> result(new LQInfo(A_n_rows));
 	__orthog_cache.set_size(A_n_cols, A_n_cols);
 	__orthog_cache.submat(0, 0, A_n_rows - 1, A_n_cols - 1) = A;
 
@@ -58,23 +59,21 @@ LQInfo::compute(arma::mat const & A) {
 	/* Compute LQ decomposition of A */
 	arma_fortran(dgelqf)(&m, &n, __orthog_cache.memptr(), &lda, __tau.memptr(),
 			__work.memptr(), &lwork, &info);
-	__lq_cache.set_size(A_n_rows, A_n_cols);
-	__lq_cache = __orthog_cache.head_rows(A_n_rows);
+	__li_cache = arma::inv(arma::trimatl(__orthog_cache.submat(0, 0, A_n_rows -
+					1, A_n_rows - 1)));
 	/* Compute orthogonal matrix from LQ decomp to get nullspace */
 	arma_fortran(dorglq)(&n, &n, &k, __orthog_cache.memptr(), &n, __tau.memptr(),
 			__work.memptr(), &lwork, &info);
 
 	/* Write nullspace to output. */
-	__nullvec = __orthog_cache.row(A_n_rows).t();
+	result->_nullspace = __orthog_cache.row(A_n_rows).t();
+	result->_qtli = __orthog_cache.head_rows(A_n_rows).t() * __li_cache;
 	
-	return std::move(std::unique_ptr<LQInfo>(new LQInfo(__lq_cache, __tau,
-					__nullvec)));
+	return std::move(result);
 }
-LQInfo::LQInfo(arma::mat const & lq, arma::podarray<double> const & tau,
-		arma::vec const & null)
-	: _lq(lq),
-		_tau(tau.memptr(), lq.n_cols - 1),
-		_nullspace(null) {}
+LQInfo::LQInfo(arma::uword const dim)
+	: _qtli(dim + 1, dim),
+		_nullspace(dim + 1) {}
 }
 }
 

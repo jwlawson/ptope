@@ -33,21 +33,15 @@ public:
 	static
 	std::unique_ptr<LQInfo>
 	compute(arma::mat const & m);
-	/** Get pointer to LQ array */
+	/** Get pointer to Q**T * inv(L) matrix */
 	double *
-	lq_ptr();
-	/** Get pointer to tau array */
-	double *
-	tau_ptr();
+	qtli_ptr();
 	/** Get pointer to nullspace array */
 	double *
 	null_ptr();
-	/** Get reference to LQ matrix */
+	/** Get reference to Q**T * inv(L) matrix */
 	arma::mat const &
-	lq() const;
-	/** Get reference to tau vector */
-	arma::vec const &
-	tau() const;
+	qtli() const;
 	/** Get reference to nullspace vector */
 	arma::vec const &
 	null() const;
@@ -55,17 +49,9 @@ private:
 	/**
 	 * Construct the LQ decomposition of the provided matrix using LAPACK deglqf.
 	 */
-	LQInfo(arma::mat const & lq, arma::podarray<double> const & tau,
-			arma::vec const & null);
-	/**
-	 * The LQ matrix returned by dgelqf LAPACK routine. The lower triangle is L, the
-	 * upper triangle (together with _tau) encodes the orthogonal Q.
-	 */
-	arma::mat _lq;
-	/**
-	 * Vector of orthogonalising pivots from dgelqf LAPACK routine.
-	 */
-	arma::vec _tau;
+	LQInfo(arma::uword const size);
+	/** Product Q**T * inv(L) */
+	arma::mat _qtli;
 	/**
 	 * Vector of nullspace of the system of equations defined by LQ.
 	 */
@@ -73,13 +59,8 @@ private:
 };
 inline
 double *
-LQInfo::lq_ptr() {
-	return _lq.memptr();
-}
-inline
-double *
-LQInfo::tau_ptr() {
-	return _tau.memptr();
+LQInfo::qtli_ptr() {
+	return _qtli.memptr();
 }
 inline
 double *
@@ -88,13 +69,8 @@ LQInfo::null_ptr() {
 }
 inline
 arma::mat const &
-LQInfo::lq() const {
-	return _lq;
-}
-inline
-arma::vec const &
-LQInfo::tau() const {
-	return _tau;
+LQInfo::qtli() const {
+	return _qtli;
 }
 inline
 arma::vec const &
