@@ -33,12 +33,6 @@ public:
 	static
 	std::unique_ptr<LQInfo>
 	compute(arma::mat const & m);
-	/** Get pointer to Q**T * inv(L) matrix */
-	double *
-	qtli_ptr();
-	/** Get pointer to nullspace array */
-	double *
-	null_ptr();
 	/** Get reference to Q**T * inv(L) matrix */
 	arma::mat const &
 	qtli() const;
@@ -50,23 +44,15 @@ private:
 	 * Construct the LQ decomposition of the provided matrix using LAPACK deglqf.
 	 */
 	LQInfo(arma::uword const size);
-	/** Product Q**T * inv(L) */
+	/**
+	 * Product Q**T * inv(L)
+	 */
 	arma::mat _qtli;
 	/**
 	 * Vector of nullspace of the system of equations defined by LQ.
 	 */
 	arma::vec _nullspace;
 };
-inline
-double *
-LQInfo::qtli_ptr() {
-	return _qtli.memptr();
-}
-inline
-double *
-LQInfo::null_ptr() {
-	return _nullspace.memptr();
-}
 inline
 arma::mat const &
 LQInfo::qtli() const {
@@ -80,15 +66,13 @@ LQInfo::null() const {
 #if !defined(ARMA_BLAS_CAPITALS)
 #define arma_dorglq dorglq
 #define arma_dgelqf dgelqf
-#define arma_dormlq dormlq
 #else
 #define arma_dorglq DORGLQ
 #define arma_dgelqf DGEQLF
-#define arma_dormlq DORMLQ
 #endif
 extern "C" {
 /* Compute LQ decomposition of matrix. */
-void arma_fortran(dgelqf)(
+void arma_fortran(arma_dgelqf)(
 	arma::blas_int* m,
 	arma::blas_int* n,
 	double* a,
@@ -98,7 +82,7 @@ void arma_fortran(dgelqf)(
 	arma::blas_int*	lwork,
 	arma::blas_int* info);
 /* Find Q from the LQ decom given by dgelqf */
-void arma_fortran(dorglq)(
+void arma_fortran(arma_dorglq)(
 	arma::blas_int* m,
 	arma::blas_int* n,
 	arma::blas_int* k,
