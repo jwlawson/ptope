@@ -49,11 +49,7 @@ void
 MEquivEqual::sums(const arma::mat & m, std::vector<double> & out) const {
 	out.reserve(m.n_cols);
 	for(arma::uword i = 0, max = m.n_cols; i < max; ++i) {
-		double c_sum = 0;
-		for(auto cit = m.begin_col(i), end = m.end_col(i); cit != end; ++cit) {
-			c_sum += *cit;
-		}
-		out[i] = c_sum;
+		out[i] = std::accumulate(m.begin_col(i), m.end_col(i), static_cast<double>(0));
 	}
 }
 void
@@ -80,27 +76,25 @@ MEquivEqual::check_permutation(const arma::mat & lhs, const arma::mat & rhs,
 	bool result = false;
 	if(index == lhs.n_cols) {
 		// Have complete permutation
-		__p_cols.set_size(rhs.n_rows, rhs.n_cols);
-		for(arma::uword i = 0, max = lhs.n_cols; i < max; ++i) {
-			__p_cols.col(i) = rhs.col(perm[i]);
-		}
-		__permuted.set_size(rhs.n_rows, rhs.n_cols);
-		for(arma::uword i = 0, max = lhs.n_cols; i < max; ++i) {
-			__permuted.row(i) = __p_cols.row(perm[i]);
-		}
-		bool equal = true;
-		for(arma::uword i = 0, max = __permuted.size(); i < max && equal; ++i) {
-			equal = _d_eq(__permuted(i), lhs(i));
-		}
-		result = equal;
+		result = true;
 	} else {
 		// Add another entry to the permutation
 		for(const arma::uword & map : comp[index]) {
 			if(result) break;
+			// Check that the new map value is not already in perm
 			if(std::find(perm.begin(), perm.begin() + index, map)
 					== perm.begin() + index) {
-				perm[index] = map;
-				result = check_permutation(lhs, rhs, perm, index + 1, comp);
+				// Check that the value gives correct permutation so far
+				bool skip = false;
+				double const * lhs_col_data = lhs.colptr(index);
+				double const * rhs_col_data = rhs.colptr(map);
+				for(size_t k = 0; !skip && k < index; ++k) {
+					skip = !_d_eq(lhs_col_data[k], rhs_col_data[perm[k]]);
+				}
+				if(!skip) {
+					perm[index] = map;
+					result = check_permutation(lhs, rhs, perm, index + 1, comp);
+				}
 			}
 		}
 	}
@@ -121,11 +115,7 @@ void
 MColPermEquiv::sums(const arma::mat & m, std::vector<double> & out) const {
 	out.reserve(m.n_cols);
 	for(arma::uword i = 0, max = m.n_cols; i < max; ++i) {
-		double c_sum = 0;
-		for(auto cit = m.begin_col(i), end = m.end_col(i); cit != end; ++cit) {
-			c_sum += *cit;
-		}
-		out[i] = c_sum;
+		out[i] = std::accumulate(m.begin_col(i), m.end_col(i), static_cast<double>(0));
 	}
 }
 void
@@ -151,24 +141,23 @@ MColPermEquiv::check_permutation(const arma::mat & lhs, const arma::mat & rhs,
 		const std::vector<std::vector<arma::uword>> & comp) const {
 	bool result = false;
 	if(index == lhs.n_cols) {
-		// Have complete permutation
-		__permuted.set_size(rhs.n_rows, rhs.n_cols);
-		for(arma::uword i = 0, max = lhs.n_cols; i < max; ++i) {
-			__permuted.col(i) = rhs.col(perm[i]);
-		}
-		bool equal = true;
-		for(arma::uword i = 0, max = __permuted.size(); i < max && equal; ++i) {
-			equal = _d_eq(__permuted(i), lhs(i));
-		}
-		result = equal;
+		result = true;
 	} else {
 		// Add another entry to the permutation
 		for(const arma::uword & map : comp[index]) {
 			if(result) break;
 			if(std::find(perm.begin(), perm.begin() + index, map)
 					== perm.begin() + index) {
-				perm[index] = map;
-				result = check_permutation(lhs, rhs, perm, index + 1, comp);
+				bool skip = false;
+				double const * lhs_col_data = lhs.colptr(index);
+				double const * rhs_col_data = rhs.colptr(map);
+				for(size_t k = 0; !skip && k < index; ++k) {
+					skip = !_d_eq(lhs_col_data[k], rhs_col_data[k]);
+				}
+				if(!skip) {
+					perm[index] = map;
+					result = check_permutation(lhs, rhs, perm, index + 1, comp);
+				}
 			}
 		}
 	}
