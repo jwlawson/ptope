@@ -72,5 +72,22 @@ TEST(AngleCheck, DottedEdges) {
 	AngleCheck chk;
 	EXPECT_TRUE(chk(a));
 }
+TEST( AngleCheck, ZeroVal ) {
+	Angles::get().set_angles({ 2 });
+	AngleCheck chk;
+	EXPECT_TRUE( chk(0) );
+	EXPECT_TRUE( chk(0.0) );
+	EXPECT_TRUE( chk(1e-14) );
+	EXPECT_TRUE( chk(-1e-14) );
+}
+TEST( AngleCheck, LessThanMinusOne ) {
+	Angles::get().set_angles({ 2 , 3 , 4 });
+	AngleCheck chk;
+	EXPECT_TRUE( chk(-1.1) );
+	EXPECT_TRUE( chk(-1.0 - 1e-14) );
+	EXPECT_TRUE( chk(-1.0 + 1e-19) );
+	EXPECT_TRUE( chk(-29) );
+}
+
 }
 

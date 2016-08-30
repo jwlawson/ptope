@@ -32,6 +32,7 @@ public:
 	AngleCheck();
 	bool operator()(const PolytopeCandidate & p);
 	bool operator()(const arma::mat & m);
+	bool operator()(const double & val);
 private:
 	std::vector<double> _values;
 	comparator::DoubleLess _dless;

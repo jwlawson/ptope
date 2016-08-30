@@ -35,16 +35,16 @@ AngleCheck::operator()(const arma::mat & m) {
 	const arma::vec & last_col = m.unsafe_col(last_col_ind);
 	for(arma::uword i = 0; result && i < last_col_ind; ++i) {
 		const double & val = last_col(i);
-		if(val < (-1.0 + error) ) {
-			continue;
-		}
-		/* No entries apart from diagonals should be greater than 0 */
-		if(val > error || 
-				!std::binary_search(_values.begin(), _values.end(), val, _dless)) {
-			/* Value not found */
-			result = false;
-		}
+		result = operator()(val);
 	}
 	return result;
+}
+bool
+AngleCheck::operator()(const double & val) {
+	bool is_valid = 
+		val < error + 0.0  // No entries apart from diagonals should be greater than 0
+		&& (  val < error + -1.0   // No angle
+			|| std::binary_search(_values.begin(), _values.end(), val, _dless) );
+	return is_valid;
 }
 }
