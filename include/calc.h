@@ -65,18 +65,44 @@ inline
 mink_inner_prod(std::size_t n_elems, double const * const a,
 		double const * const b) {
 	const std::size_t max = n_elems - 1;
-	double eucl = eucl_inner_prod(max, a, b);
+	double result = eucl_inner_prod(max, a, b);
 	double m = a[max] * b[max];
-	return eucl - m;
+	result -= m;
+	return result;
 }
 double
 inline
 mink_inner_prod(const arma::vec & a, const arma::vec & b) {
 	const std::size_t max = a.size() - 1;
-	double eucl = std::inner_product(a.begin(), a.end() - 1, b.begin(),
+	double result;
+	switch(max){
+		case 2:
+			result = a[0]*b[0] + a[1]*b[1];
+			break;
+		case 3:
+			result = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+			break;
+		case 4:
+			result = a[0]*b[0] + a[1]*b[1] + a[2]*b[2] + a[3]*b[3];
+			break;
+		case 5:
+			result = a[0]*b[0] + a[1]*b[1] + a[2]*b[2] + a[3]*b[3] + a[4]*b[4];
+			break;
+		case 6:
+			result = a[0]*b[0] + a[1]*b[1] + a[2]*b[2] + a[3]*b[3] + a[4]*b[4]
+				+ a[5]*b[5];
+			break;
+		case 7:
+			result = a[0]*b[0] + a[1]*b[1] + a[2]*b[2] + a[3]*b[3] + a[4]*b[4]
+				+ a[5]*b[5] + a[6]*b[6];
+			break;
+		default:
+			result = std::inner_product(a.begin(), a.end() - 1, b.begin(),
 			static_cast<double>(0));
+	}
 	double m = a[max] * b[max];
-	return eucl - m;
+	result -= m;
+	return result;
 }
 double
 inline

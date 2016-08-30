@@ -16,23 +16,24 @@
  */
 #include "matrix_equiv.h"
 
+#include <boost/functional/hash.hpp>
+
 namespace ptope {
 std::size_t
 MEquivHash::operator()(const arma::mat & m) const {
-	std::size_t result = 0;
-	std::size_t R = 1779033703;
+	static auto rnd = [](double const& val)->std::size_t{return std::lround(val * 1e5);};
+	std::size_t hash = 113;
+	std::vector<std::pair<std::size_t, std::size_t>> sums(m.n_rows);
 	for(arma::uword i = 0, max = m.n_cols; i < max; ++i) {
-		std::size_t c_sum = 0;
-		std::size_t c_sq_sum = 0;
-		for(auto cit = m.begin_col(i), end = m.end_col(i); cit != end; ++cit) {
-			std::size_t val = std::lround(*cit * 10000);
-			c_sum += R + 2*val;
-			c_sq_sum += val * val;
-		}
-		result += c_sum * c_sum + (R + 2*c_sq_sum);
+		sums[i].first = rnd(std::accumulate(m.begin_col(i), m.end_col(i),
+				static_cast<double>(0)));
+		sums[i].second = rnd(std::accumulate(m.begin_col(i), m.end_col(i),
+				static_cast<double>(0),
+				[](double const& init, double const& val){return init + (val * val);}));
 	}
-	result /= 2;
-	return result;
+	std::sort(sums.begin(), sums.end());
+	boost::hash_combine(hash, sums);
+	return hash;
 }
 bool
 MEquivEqual::operator()(const arma::mat & lhs, const arma::mat & rhs) const {

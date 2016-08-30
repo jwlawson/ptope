@@ -50,8 +50,6 @@ private:
 	mutable std::vector<double> __r_sum;
 	mutable std::vector<std::vector<arma::uword>> __comp;
 	mutable std::vector<arma::uword> __perm;
-	mutable arma::mat __p_cols;
-	mutable arma::mat __permuted;
 	comparator::DoubleEquals _d_eq;
 	/**
 	 * Get the column sums for the provided matrix.
@@ -88,7 +86,6 @@ private:
 	mutable std::vector<double> __r_sum;
 	mutable std::vector<std::vector<arma::uword>> __comp;
 	mutable std::vector<arma::uword> __perm;
-	mutable arma::mat __permuted;
 	comparator::DoubleEquals _d_eq;
 	/**
 	 * Get the column sums for the provided matrix.
