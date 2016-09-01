@@ -58,15 +58,32 @@ GramMatrix::priv_rfp_index_to_ij( std::size_t const& index ) const {
 		row = rfp_row;
 		col = rfp_col + m_rfp_ncols - ( m_nvecs % 2 );
 	} else {
-		col = m_rfp_ncols - rfp_col - 1 - ( m_nvecs % 2 );
-		row = m_rfp_nrows - rfp_row - 1;
+		col = rfp_row + rfp_col - row_cutoff;
+		row = rfp_col;
 	}
 	return { row, col };
 }
 std::size_t
 GramMatrix::priv_ij_to_rfp_index( std::size_t const& row ,
 		std::size_t const& col ) const {
-	return 0;
+	std::size_t result;
+	if( row > col ) {
+		result = priv_ij_to_rfp_index( col, row );
+	} else {
+		std::size_t rfp_row;
+		std::size_t rfp_col;
+		std::size_t col_threshold = m_rfp_ncols - (m_nvecs % 2);
+		if( col >= col_threshold ) {
+			rfp_row = row;
+			rfp_col = col - col_threshold;
+		} else {
+			rfp_row = col_threshold + col + 1;
+			rfp_col = row;
+		}
+
+		result = rfp_col * m_rfp_nrows + rfp_row;
+	}
+	return result;
 }
 void
 GramMatrix::priv_products_prepare( ptope::VectorSet const& vectors ) {
