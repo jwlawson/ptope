@@ -16,50 +16,32 @@
  */
 #include "gram_matrix.h"
 
-#include <tuple>
 
 namespace ptope {
+const char GramMatrix::L = 'L';
 const char GramMatrix::N = 'N';
 const char GramMatrix::T = 'T';
-const char GramMatrix::U = 'U';
 const double GramMatrix::one = 1.0;
 const double GramMatrix::minus_one = -1.0;
 const arma::blas_int GramMatrix::int_one = 1;
 
-void
-GramMatrix::from( ptope::VectorSet const& vectors ) {
-	priv_products_prepare( vectors );
-	priv_products_compute( vectors );
-}
-GramMatrix::Entry
-GramMatrix::at( std::size_t const& index ) const {
-	Entry result;
-	std::tie(result.row, result.col) = priv_rfp_index_to_ij( index );
-	result.val = m_matrix[index];
-	return result;
-}
-double
-GramMatrix::at( std::size_t const& row, std::size_t const& col ) const {
-	return m_matrix[ priv_ij_to_rfp_index( row, col ) ];
-}
-std::size_t
-GramMatrix::priv_min_product_size( ptope::VectorSet const& vectors ) {
-	std::size_t num = vectors.size();
-	return ( num * ( num + 1 ) ) / 2;
-}
 std::pair<std::size_t, std::size_t>
 GramMatrix::priv_rfp_index_to_ij( std::size_t const& index ) const {
 	std::size_t rfp_col = index / m_rfp_nrows;
-	std::size_t row_cutoff = m_nvecs / 2 + 1 + rfp_col;
+	bool is_even = m_nvecs % 2 == 0;
+	std::size_t row_cutoff = rfp_col;
+	if( is_even ) { ++row_cutoff; }
 	std::size_t rfp_row = index % m_rfp_nrows;
 	std::size_t row;
 	std::size_t col;
 	if( rfp_row < row_cutoff ) {
-		row = rfp_row;
-		col = rfp_col + m_rfp_ncols - ( m_nvecs % 2 );
+		row = m_rfp_ncols + rfp_col;
+		col = m_rfp_ncols + rfp_row;
+		if( !is_even ) { --row; }
 	} else {
-		col = rfp_row + rfp_col - row_cutoff;
-		row = rfp_col;
+		col = rfp_col;
+		row = rfp_row;
+		if( is_even ) { --row; }
 	}
 	return { row, col };
 }
@@ -67,20 +49,21 @@ std::size_t
 GramMatrix::priv_ij_to_rfp_index( std::size_t const& row ,
 		std::size_t const& col ) const {
 	std::size_t result;
-	if( row > col ) {
+	if( row < col ) {
 		result = priv_ij_to_rfp_index( col, row );
 	} else {
 		std::size_t rfp_row;
 		std::size_t rfp_col;
-		std::size_t col_threshold = m_rfp_ncols - (m_nvecs % 2);
-		if( col >= col_threshold ) {
+		std::size_t col_threshold = m_rfp_ncols;
+		if( col < col_threshold ) {
 			rfp_row = row;
-			rfp_col = col - col_threshold;
+			if( m_nvecs % 2 == 0 ) { ++rfp_row; }
+			rfp_col = col;
 		} else {
-			rfp_row = col_threshold + col + 1;
-			rfp_col = row;
+			rfp_row = col - col_threshold;
+			rfp_col = row - col_threshold;
+			if( m_nvecs % 2  == 1 ) { ++rfp_col; }
 		}
-
 		result = rfp_col * m_rfp_nrows + rfp_row;
 	}
 	return result;
@@ -106,11 +89,11 @@ GramMatrix::priv_products_compute( ptope::VectorSet const& vectors ) {
 	double * out_ptr = m_matrix.memptr();
 
 	/* Compute hyperbolic part of product */
-	arma_fortran(arma_dsfrk)(&N, &U, &T, &n, &int_one, &one, hyp_part_ptr, &lda,
+	blas::arma_fortran(arma_dsfrk)(&N, &L, &T, &n, &int_one, &one, hyp_part_ptr, &lda,
 			&one, out_ptr);
 	/* Compute inner product of euclidean part and subtract the hyperbolic
 	 * product. */
-	arma_fortran(arma_dsfrk)(&N, &U, &T, &n, &k, &one, vector_ptr, &lda,
+	blas::arma_fortran(arma_dsfrk)(&N, &L, &T, &n, &k, &one, vector_ptr, &lda,
 			&minus_one, out_ptr);
 }
 }

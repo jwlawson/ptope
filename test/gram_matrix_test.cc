@@ -34,18 +34,18 @@ TEST(GramMatrix, TwoEuclVectors) {
 	EXPECT_DOUBLE_EQ( 1, ba );
 	EXPECT_DOUBLE_EQ( 2, bb );
 
-	auto first = gram.at( 0 );
-	EXPECT_EQ( 0u, first.row );
+	auto first = gram.at_rfp( 0 );
+	EXPECT_EQ( 1u, first.row );
 	EXPECT_EQ( 1u, first.col );
-	EXPECT_DOUBLE_EQ( 1, first.val );
+	EXPECT_DOUBLE_EQ( 2, first.val );
 
-	auto second = gram.at( 1 );
-	EXPECT_EQ( 1u, second.row );
-	EXPECT_EQ( 1u, second.col );
-	EXPECT_DOUBLE_EQ( 2, second.val );
+	auto second = gram.at_rfp( 1 );
+	EXPECT_EQ( 0u, second.row );
+	EXPECT_EQ( 0u, second.col );
+	EXPECT_DOUBLE_EQ( 1, second.val );
 	
-	auto third = gram.at( 2 );
-	EXPECT_EQ( 0u, third.row );
+	auto third = gram.at_rfp( 2 );
+	EXPECT_EQ( 1u, third.row );
 	EXPECT_EQ( 0u, third.col );
 	EXPECT_DOUBLE_EQ( 1, third.val );
 }
@@ -171,40 +171,45 @@ TEST(GramMatrix, RFPIndexFiveVectors) {
 	GramMatrix gram;
 	gram.from( set );
 
-	auto e = gram.at( 0 );
-	EXPECT_EQ( 0u, e.row );
-	EXPECT_EQ( 2u, e.col );
-	EXPECT_DOUBLE_EQ( gram.at( 0, 2 ), e.val );
-
-	e = gram.at( 3 );
+	auto e = gram.at_rfp( 0 );
 	EXPECT_EQ( 0u, e.row );
 	EXPECT_EQ( 0u, e.col );
 	EXPECT_DOUBLE_EQ( gram.at( 0, 0 ), e.val );
 
-	e = gram.at( 4 );
-	EXPECT_EQ( 0u, e.row );
-	EXPECT_EQ( 1u, e.col );
-	EXPECT_DOUBLE_EQ( gram.at( 0, 1 ), e.val );
+	e = gram.at_rfp( 3 );
+	EXPECT_EQ( 3u, e.row );
+	EXPECT_EQ( 0u, e.col );
+	EXPECT_DOUBLE_EQ( gram.at( 3, 0 ), e.val );
 
-	e = gram.at( 8 );
+	e = gram.at_rfp( 5 );
 	EXPECT_EQ( 3u, e.row );
 	EXPECT_EQ( 3u, e.col );
 	EXPECT_DOUBLE_EQ( gram.at( 3, 3 ), e.val );
 
-	e = gram.at( 9 );
+	e = gram.at_rfp( 6 );
 	EXPECT_EQ( 1u, e.row );
 	EXPECT_EQ( 1u, e.col );
 	EXPECT_DOUBLE_EQ( gram.at( 1, 1 ), e.val );
 
-	e = gram.at( 10 );
-	EXPECT_EQ( 0u, e.row );
-	EXPECT_EQ( 4u, e.col );
-	EXPECT_DOUBLE_EQ( gram.at( 0, 4 ), e.val );
+	e = gram.at_rfp( 9 );
+	EXPECT_EQ( 4u, e.row );
+	EXPECT_EQ( 1u, e.col );
+	EXPECT_DOUBLE_EQ( gram.at( 4, 1 ), e.val );
 
-	e = gram.at( 14 );
+	e = gram.at_rfp( 10 );
+	EXPECT_EQ( 4u, e.row );
+	EXPECT_EQ( 3u, e.col );
+	EXPECT_DOUBLE_EQ( gram.at( 4, 3 ), e.val );
+
+	e = gram.at_rfp( 11 );
 	EXPECT_EQ( 4u, e.row );
 	EXPECT_EQ( 4u, e.col );
 	EXPECT_DOUBLE_EQ( gram.at( 4, 4 ), e.val );
+
+	e = gram.at_rfp( 12 );
+	EXPECT_EQ( 2u, e.row );
+	EXPECT_EQ( 2u, e.col );
+	EXPECT_DOUBLE_EQ( gram.at( 2, 2 ), e.val );
 }
 TEST(GramMatrix, RFPIndexSixVectors) {
 	VectorSet set(3);
@@ -218,60 +223,65 @@ TEST(GramMatrix, RFPIndexSixVectors) {
 	GramMatrix gram;
 	gram.from( set );
 
-	auto e = gram.at( 0 );
-	EXPECT_EQ( 0u, e.row );
-	EXPECT_EQ( 3u, e.col );
-	EXPECT_DOUBLE_EQ( gram.at( 0, 3 ), e.val );
-
-	e = gram.at( 3 );
+	auto e = gram.at_rfp( 0 );
 	EXPECT_EQ( 3u, e.row );
 	EXPECT_EQ( 3u, e.col );
 	EXPECT_DOUBLE_EQ( gram.at( 3, 3 ), e.val );
 
-	e = gram.at( 4 );
+	e = gram.at_rfp( 1 );
 	EXPECT_EQ( 0u, e.row );
 	EXPECT_EQ( 0u, e.col );
 	EXPECT_DOUBLE_EQ( gram.at( 0, 0 ), e.val );
 
-	e = gram.at( 5 );
-	EXPECT_EQ( 0u, e.row );
-	EXPECT_EQ( 1u, e.col );
-	EXPECT_DOUBLE_EQ( gram.at( 0, 1 ), e.val );
+	e = gram.at_rfp( 6 );
+	EXPECT_EQ( 5u, e.row );
+	EXPECT_EQ( 0u, e.col );
+	EXPECT_DOUBLE_EQ( gram.at( 5, 0 ), e.val );
 
-	e = gram.at( 8 );
-	EXPECT_EQ( 1u, e.row );
-	EXPECT_EQ( 4u, e.col );
-	EXPECT_DOUBLE_EQ( gram.at( 1, 4 ), e.val );
+	e = gram.at_rfp( 7 );
+	EXPECT_EQ( 4u, e.row );
+	EXPECT_EQ( 3u, e.col );
+	EXPECT_DOUBLE_EQ( gram.at( 4, 3 ), e.val );
 
-	e = gram.at( 11 );
+	e = gram.at_rfp( 8 );
 	EXPECT_EQ( 4u, e.row );
 	EXPECT_EQ( 4u, e.col );
 	EXPECT_DOUBLE_EQ( gram.at( 4, 4 ), e.val );
 
-	e = gram.at( 12 );
+	e = gram.at_rfp( 9 );
 	EXPECT_EQ( 1u, e.row );
 	EXPECT_EQ( 1u, e.col );
 	EXPECT_DOUBLE_EQ( gram.at( 1, 1 ), e.val );
 
-	e = gram.at( 13 );
-	EXPECT_EQ( 1u, e.row );
-	EXPECT_EQ( 2u, e.col );
-	EXPECT_DOUBLE_EQ( gram.at( 1, 2 ), e.val );
+	e = gram.at_rfp( 13 );
+	EXPECT_EQ( 5u, e.row );
+	EXPECT_EQ( 1u, e.col );
+	EXPECT_DOUBLE_EQ( gram.at( 5, 1 ), e.val );
 
-	e = gram.at( 14 );
-	EXPECT_EQ( 0u, e.row );
-	EXPECT_EQ( 5u, e.col );
-	EXPECT_DOUBLE_EQ( gram.at( 0, 5 ), e.val );
+	e = gram.at_rfp( 14 );
+	EXPECT_EQ( 5u, e.row );
+	EXPECT_EQ( 3u, e.col );
+	EXPECT_DOUBLE_EQ( gram.at( 5, 3 ), e.val );
 
-	e = gram.at( 19 );
+	e = gram.at_rfp( 15 );
+	EXPECT_EQ( 5u, e.row );
+	EXPECT_EQ( 4u, e.col );
+	EXPECT_DOUBLE_EQ( gram.at( 5, 4 ), e.val );
+
+	e = gram.at_rfp( 16 );
 	EXPECT_EQ( 5u, e.row );
 	EXPECT_EQ( 5u, e.col );
 	EXPECT_DOUBLE_EQ( gram.at( 5, 5 ), e.val );
 
-	e = gram.at( 20 );
+	e = gram.at_rfp( 17 );
 	EXPECT_EQ( 2u, e.row );
 	EXPECT_EQ( 2u, e.col );
 	EXPECT_DOUBLE_EQ( gram.at( 2, 2 ), e.val );
+
+	e = gram.at_rfp( 20 );
+	EXPECT_EQ( 5u, e.row );
+	EXPECT_EQ( 2u, e.col );
+	EXPECT_DOUBLE_EQ( gram.at( 5, 2 ), e.val );
 }
 }
 
