@@ -61,8 +61,23 @@ public:
 
 private:
 	AngleCheck m_check;
+	std::size_t m_num_vecs;
 	GramMatrix m_gram;
 	boost::dynamic_bitset<> m_bits;
+
+	/**
+	 * Extract the compatibility data from the gram matrix.
+	 *
+	 * The RFP format is best decoded separately depending on whether there are an
+	 * odd or even number of vectors (i.e. the gram matrix has an odd or even
+	 * number of rows/columns).
+	 */
+	void priv_compatibility_even();
+	void priv_compatibility_odd();
+	/**
+	 * Get the index in the bitset for the data at (row, col).
+	 */
+	std::size_t priv_index_from_ij( std::size_t const row, std::size_t const col ) const;
 };
 }
 #endif

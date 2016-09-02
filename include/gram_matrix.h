@@ -117,6 +117,11 @@ GramMatrix::at( std::size_t const& row, std::size_t const& col ) const {
 	return m_matrix[ priv_ij_to_rfp_index( row, col ) ];
 }
 inline
+double
+GramMatrix::raw_rfp( std::size_t const& index ) const {
+	return m_matrix[ index ];
+}
+inline
 std::size_t
 GramMatrix::priv_min_product_size( ptope::VectorSet const& vectors ) {
 	std::size_t num = vectors.size();
