@@ -27,11 +27,11 @@ const arma::blas_int GramMatrix::int_one = 1;
 
 std::pair<std::size_t, std::size_t>
 GramMatrix::priv_rfp_index_to_ij( std::size_t const& index ) const {
-	std::size_t rfp_col = index / m_rfp_nrows;
-	bool is_even = m_nvecs % 2 == 0;
+	std::size_t const rfp_col = index / m_rfp_nrows;
+	bool const is_even = m_nvecs % 2 == 0;
 	std::size_t row_cutoff = rfp_col;
 	if( is_even ) { ++row_cutoff; }
-	std::size_t rfp_row = index % m_rfp_nrows;
+	std::size_t const rfp_row = index % m_rfp_nrows;
 	std::size_t row;
 	std::size_t col;
 	if( rfp_row < row_cutoff ) {
@@ -54,7 +54,7 @@ GramMatrix::priv_ij_to_rfp_index( std::size_t const& row ,
 	} else {
 		std::size_t rfp_row;
 		std::size_t rfp_col;
-		std::size_t col_threshold = m_rfp_ncols;
+		std::size_t const col_threshold = m_rfp_ncols;
 		if( col < col_threshold ) {
 			rfp_row = row;
 			if( m_nvecs % 2 == 0 ) { ++rfp_row; }
@@ -79,8 +79,8 @@ GramMatrix::priv_products_prepare( ptope::VectorSet const& vectors ) {
 }
 void
 GramMatrix::priv_products_compute( ptope::VectorSet const& vectors ) {
-	std::size_t total_dim = vectors.dimension();
-	std::size_t real_dim = total_dim - 1;
+	std::size_t const total_dim = vectors.dimension();
+	std::size_t const real_dim = total_dim - 1;
 	double const * vector_ptr = vectors.memptr();
 	double const * hyp_part_ptr = vector_ptr + real_dim;
 	arma::blas_int n = m_nvecs;
