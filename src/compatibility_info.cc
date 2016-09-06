@@ -38,9 +38,14 @@ CompatibilityInfo::next_compatible_to( std::size_t vector, std::size_t prev ) co
 	if( prev < vector ) { prev = vector; }
 	std::size_t const base = priv_index_from_ij( vector, vector );
 	std::size_t const based_prev = base + ( prev - vector );
-	std::size_t const max_index = base + m_num_vecs - vector;
-	std::size_t next_ind = m_bits.find_next( based_prev );
-	if( next_ind > max_index ) { next_ind = vector; }
+	std::size_t const next_base = m_bits.find_next( based_prev );
+	std::size_t const max_index = base + m_num_vecs - vector - 1;
+	std::size_t next_ind;
+	if( next_base > max_index ) {
+		next_ind = vector;
+	} else {
+		next_ind = vector + ( next_base - base );
+	}
 	return next_ind;
 }
 void
@@ -49,12 +54,10 @@ CompatibilityInfo::priv_compatibility_even() {
 	std::size_t const gram_nrows = m_num_vecs + 1;
 	std::size_t bits_ind = 0;
 	std::size_t gram_ind = 0;
-	std::size_t max = m_num_vecs * (m_num_vecs + 1) / 2;
 	for( std::size_t col = 0; col < gram_ncols; ++col ) {
 		gram_ind += col + 1;
 		for( std::size_t row = 1 + col; row < gram_nrows; ++row, ++bits_ind, ++gram_ind ) {
 			double const val = m_gram.raw_rfp( gram_ind );
-			assert( bits_ind < max);
 			m_bits.set( bits_ind , m_check( val ) );
 		}
 	}
@@ -62,7 +65,6 @@ CompatibilityInfo::priv_compatibility_even() {
 		for( std::size_t col = row; col < gram_ncols; ++col, ++bits_ind ) {
 			gram_ind = row + gram_nrows * col;
 			double const val = m_gram.raw_rfp( gram_ind );
-			assert( bits_ind < max);
 			m_bits.set( bits_ind , m_check( val ) );
 		}
 	}
@@ -73,12 +75,10 @@ CompatibilityInfo::priv_compatibility_odd() {
 	std::size_t const gram_nrows = m_num_vecs;
 	std::size_t bits_ind = 0;
 	std::size_t gram_ind = 0;
-	std::size_t max = m_num_vecs * (m_num_vecs + 1) / 2;
 	for( std::size_t col = 0; col < gram_ncols; ++col ) {
 		gram_ind += col;
 		for( std::size_t row = col; row < gram_nrows; ++row, ++bits_ind, ++gram_ind ) {
 			double const val = m_gram.raw_rfp( gram_ind );
-			assert( bits_ind < max);
 			m_bits.set( bits_ind , m_check( val ) );
 		}
 	}
@@ -87,7 +87,6 @@ CompatibilityInfo::priv_compatibility_odd() {
 		for( std::size_t col = 1 + row; col < gram_ncols; ++col, ++bits_ind ) {
 			gram_ind = row + gram_nrows * col;
 			double const val = m_gram.raw_rfp( gram_ind );
-			assert( bits_ind < max);
 			m_bits.set( bits_ind , m_check( val ) );
 		}
 	}

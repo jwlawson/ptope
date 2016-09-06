@@ -109,17 +109,29 @@ TEST(CompatibilityInfo, FindNextFiveVectors) {
 
 	std::size_t next;
 	next = info.next_compatible_to( 0, 0 );
-	EXPECT_EQ( 1, next );
-	next = info.next_compatible_to( 0, next );
-	EXPECT_EQ( 3, next );
-	next = info.next_compatible_to( 0, next );
-	EXPECT_EQ( 4, next );
+	EXPECT_EQ( 1u, next );
+	next = info.next_compatible_to( 0, 1 );
+	EXPECT_EQ( 3u, next );
+	next = info.next_compatible_to( 0, 3 );
+	EXPECT_EQ( 4u, next );
 
-	next = info.next_compatible_to( 0, next );
-	EXPECT_EQ( 0, next );
+	next = info.next_compatible_to( 0, 4 );
+	EXPECT_EQ( 0u, next );
 
+	EXPECT_FALSE( info.are_compatible( 1, 2 ) );
+	EXPECT_FALSE( info.are_compatible( 1, 3 ) );
+	EXPECT_FALSE( info.are_compatible( 1, 4 ) );
 	next = info.next_compatible_to( 1, 0 );
-	EXPECT_EQ( 1, next );
+	EXPECT_EQ( 1u, next );
+
+	EXPECT_FALSE( info.are_compatible( 2, 3 ) );
+	EXPECT_TRUE( info.are_compatible( 2, 4 ) );
+	next = info.next_compatible_to( 2, 0 );
+	EXPECT_EQ( 4u, next );
+	next = info.next_compatible_to( 2, 3 );
+	EXPECT_EQ( 4u, next );
+	next = info.next_compatible_to( 2, 4 );
+	EXPECT_EQ( 2u, next );
 }
 TEST(CompatibilityInfo, FindNextSixVectors) {
 	VectorSet set( 3 );
@@ -142,19 +154,28 @@ TEST(CompatibilityInfo, FindNextSixVectors) {
 
 	std::size_t next;
 	next = info.next_compatible_to( 0, 0 );
-	EXPECT_EQ( 1, next );
-	next = info.next_compatible_to( 0, next );
-	EXPECT_EQ( 3, next );
-	next = info.next_compatible_to( 0, next );
-	EXPECT_EQ( 4, next );
-	next = info.next_compatible_to( 0, next );
-	EXPECT_EQ( 5, next );
+	EXPECT_EQ( 1u, next );
+	next = info.next_compatible_to( 0, 1 );
+	EXPECT_EQ( 3u, next );
+	next = info.next_compatible_to( 0, 3 );
+	EXPECT_EQ( 4u, next );
+	next = info.next_compatible_to( 0, 4 );
+	EXPECT_EQ( 5u, next );
 
-	next = info.next_compatible_to( 0, next );
-	EXPECT_EQ( 0, next );
+	next = info.next_compatible_to( 0, 5 );
+	EXPECT_EQ( 0u, next );
 
 	next = info.next_compatible_to( 1, 0 );
-	EXPECT_EQ( 1, next );
+	EXPECT_EQ( 1u, next );
+
+	EXPECT_FALSE( info.are_compatible( 2, 3 ) );
+	EXPECT_TRUE( info.are_compatible( 2, 4 ) );
+	next = info.next_compatible_to( 2, 0 );
+	EXPECT_EQ( 4u, next );
+	next = info.next_compatible_to( 2, 3 );
+	EXPECT_EQ( 4u, next );
+	next = info.next_compatible_to( 2, 4 );
+	EXPECT_EQ( 2u, next );
 }
 }
 
