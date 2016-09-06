@@ -35,7 +35,9 @@ VectorSet::VectorSet( arma::uword const& dimension, arma::uword initial_cap )
 	, m_ordered_pointers { VecPtrComparator( dimension ) }
 	, m_vector_store ( dimension , initial_cap )
 	, m_current_data_ptr { m_vector_store.memptr() }
-{}
+{	
+	//m_ordered_pointers.reserve( initial_cap );
+}
 bool
 VectorSet::contains( double const * vec_ptr ) const {
 	return m_ordered_pointers.find( vec_ptr ) != m_ordered_pointers.end();
@@ -82,8 +84,9 @@ VectorSet::priv_resize_extend() {
 	double const * old_ptr = m_current_data_ptr;
 	double * new_ptr = m_vector_store.memptr();
 	std::for_each( m_ordered_pointers.begin() , m_ordered_pointers.end() , 
-			[old_ptr, new_ptr](double const * & p) {
-				p = new_ptr + std::distance( old_ptr , p );
+			[old_ptr, new_ptr](double const * const& p) {
+				double const*& q = const_cast<double const* &>(p);
+				q = new_ptr + std::distance( old_ptr , p );
 			} );
 	m_current_data_ptr = new_ptr;
 }

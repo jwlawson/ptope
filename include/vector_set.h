@@ -23,7 +23,10 @@
 #ifndef _PTOPE_VECTOR_SET_H_
 #define _PTOPE_VECTOR_SET_H_
 
-#include <boost/container/flat_set.hpp>
+#include <set>
+
+#include <boost/pool/pool_alloc.hpp>
+//#include <boost/container/flat_set.hpp>
 
 #include "armadillo"
 
@@ -38,6 +41,8 @@ class VectorSet {
 	private:
 		arma::uword const m_size;
 	};
+	typedef std::set<double const *, VecPtrComparator, boost::fast_pool_allocator<double const *>> PointerSet;
+//	typedef boost::container::flat_set<double const *, VecPtrComparator> PointerSet;
 	/** Iterator over the vectors. */
 	template<class T>
 	class vector_iterator {
@@ -159,7 +164,7 @@ public:
 
 private:
 	arma::uword const m_dimension;
-	boost::container::flat_set<double const *, VecPtrComparator> m_ordered_pointers;
+	PointerSet m_ordered_pointers;
 	arma::mat m_vector_store;
 	double * m_current_data_ptr;
 
