@@ -22,7 +22,7 @@
 
 namespace ptope {
 TEST(CompatibilityInfo, NotCompatibleSelf) {
-	VectorSet set( 3 );
+	VectorSet<double> set( 3 );
 	set.add( { 1.0, 2.0, 1.0 } );
 	set.add( { -4, 0.5, 0.23 } );
 
@@ -33,7 +33,7 @@ TEST(CompatibilityInfo, NotCompatibleSelf) {
 	EXPECT_FALSE( info.are_compatible( 1, 1 ) );
 }
 TEST(CompatibilityInfo, SymmetricFourVectors) {
-	VectorSet set( 3, 4 );
+	VectorSet<double> set( 3, 4 );
 	set.add( { 1, 0, 0 } );
 	set.add( { 0, 1, 0 } );
 	// Note: Should really be using unit vectors, but these provide 'good' inner
@@ -60,7 +60,7 @@ TEST(CompatibilityInfo, SymmetricFourVectors) {
 	EXPECT_TRUE( info.are_compatible( 3, 2 ) );
 }
 TEST(CompatibilityInfo, SymmetricFiveVectors) {
-	VectorSet set( 3 );
+	VectorSet<double> set( 3 );
 	set.add( { 1, 0, 0 } );
 	set.add( { 0, 1, 0 } );
 	set.add( { -1/std::sqrt(2), 1, 1/std::sqrt(2) } );
@@ -91,7 +91,7 @@ TEST(CompatibilityInfo, SymmetricFiveVectors) {
 	EXPECT_FALSE( info.are_compatible( 4, 2 ) );
 }
 TEST(CompatibilityInfo, FindNextFiveVectors) {
-	VectorSet set( 3 );
+	VectorSet<double> set( 3 );
 	set.add( { 1, 0, 0 } );
 	set.add( { 0, 1, 0 } );
 	set.add( { std::sqrt(2), 1, std::sqrt(2) } );
@@ -134,7 +134,7 @@ TEST(CompatibilityInfo, FindNextFiveVectors) {
 	EXPECT_EQ( 2u, next );
 }
 TEST(CompatibilityInfo, FindNextSixVectors) {
-	VectorSet set( 3 );
+	VectorSet<double> set( 3 );
 	set.add( { 1, 0, 0 } );
 	set.add( { 0, 1, 0 } );
 	set.add( { std::sqrt(2), 1, std::sqrt(2) } );

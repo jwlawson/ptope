@@ -18,7 +18,7 @@
 
 namespace ptope {
 void
-CompatibilityInfo::from( VectorSet const& vectors ) {
+CompatibilityInfo::from( VectorSet<double> const& vectors ) {
 	m_num_vecs = vectors.size();
 	m_gram.from( vectors );
 	std::size_t const num_entries = ( m_num_vecs * (m_num_vecs + 1) ) / 2;

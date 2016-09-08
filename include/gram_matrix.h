@@ -56,7 +56,7 @@ public:
 	/**
 	 * Compute the gram matrix of the provided vectors.
 	 */
-	void from( VectorSet const& vectors );
+	void from( VectorSet<double> const& vectors );
 	/**
 	 * Get the row, column and inner product at the specified RFP index.
 	 */
@@ -81,7 +81,7 @@ private:
 
 	/** Get the smallest size needed to hold all inner products of vectors. */
 	std::size_t
-	priv_min_product_size( VectorSet const& vectors );
+	priv_min_product_size( VectorSet<double> const& vectors );
 	/** Get the row, col pair for an rfp index. */
 	std::pair<std::size_t, std::size_t>
 	priv_rfp_index_to_ij( std::size_t const& index ) const;
@@ -91,79 +91,14 @@ private:
 	 * Make sure the workspace is large enough etc.
 	 */
 	void
-	priv_products_prepare( ptope::VectorSet const& vectors );
+	priv_products_prepare( VectorSet<double> const& vectors );
 	/** Compute the inner products of the vectors. */
 	void
-	priv_products_compute( ptope::VectorSet const& vectors );
+	priv_products_compute( VectorSet<double> const& vectors );
 };
 
-inline
-void
-GramMatrix::from( ptope::VectorSet const& vectors ) {
-	priv_products_prepare( vectors );
-	priv_products_compute( vectors );
-}
-inline
-GramMatrix::Entry
-GramMatrix::at_rfp( std::size_t const& index ) const {
-	Entry result;
-	std::tie(result.row, result.col) = priv_rfp_index_to_ij( index );
-	result.val = m_matrix[index];
-	return result;
-}
-inline
-double
-GramMatrix::at( std::size_t const& row, std::size_t const& col ) const {
-	return m_matrix[ priv_ij_to_rfp_index( row, col ) ];
-}
-inline
-double
-GramMatrix::raw_rfp( std::size_t const& index ) const {
-	return m_matrix[ index ];
-}
-inline
-std::size_t
-GramMatrix::priv_min_product_size( ptope::VectorSet const& vectors ) {
-	std::size_t num = vectors.size();
-	return ( num * ( num + 1 ) ) / 2;
-}
+#include "detail/gram_matrix.inl"
 
-class GramMatrix::const_iterator 
-	: public boost::iterator_facade< 
-			  GramMatrix::const_iterator
-			, GramMatrix::Entry const
-			, std::random_access_iterator_tag > {
-	typedef const_iterator self_type;
-public:
-	const_iterator() = default;
-	const_iterator( self_type const& ) = default;
-	const_iterator( self_type && ) = default;
-	const_iterator( std::size_t index, GramMatrix const& gram )
-		: m_index{ index }
-		, m_entry{}
-		, m_gram(gram)
-	{}
-
-private:
-	friend class boost::iterator_core_access;
-
-	std::size_t m_index;
-	GramMatrix::Entry m_entry;
-	GramMatrix const& m_gram;
-
-	reference dereference()
-	{ m_entry = m_gram.at_rfp(m_index); return m_entry; }
-	bool equal( self_type const& other )
-	{ return m_index == other.m_index; }
-	void increment()
-	{ ++m_index; }
-	void decrement()
-	{ --m_index; }
-	void advance( difference_type offset )
-	{ m_index += offset; }
-	difference_type distance_to( self_type const& other )
-	{ return other.m_index - m_index; }
-};
 #ifdef ARMA_USE_BLAS
 #ifndef ARMA_BLAS_CAPITALS
 	#define arma_dsfrk dsfrk

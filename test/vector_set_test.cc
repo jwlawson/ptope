@@ -19,7 +19,7 @@
 
 namespace ptope {
 TEST(VectorSet, AddSame) {
-	VectorSet set( 5 );
+	VectorSet<double> set( 5 );
 	arma::vec a { 1.0, 2.0, 3.0, 4.0, 5.0 };
 
 	EXPECT_FALSE( set.contains(a) );
@@ -28,7 +28,7 @@ TEST(VectorSet, AddSame) {
 	EXPECT_FALSE( set.add(a) );
 }
 TEST(VectorSet, ForceResize) {
-	VectorSet set( 3 , 2 );
+	VectorSet<double> set( 3 , 2 );
 	arma::vec a { 1.0, 1.1, 1.2 };
 	arma::vec b { 1.1, 1.2, 1.3 };
 	arma::vec c { 1.2, 1.3, 1.4 };

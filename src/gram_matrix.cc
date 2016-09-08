@@ -69,7 +69,7 @@ GramMatrix::priv_ij_to_rfp_index( std::size_t const& row ,
 	return result;
 }
 void
-GramMatrix::priv_products_prepare( ptope::VectorSet const& vectors ) {
+GramMatrix::priv_products_prepare( VectorSet<double> const& vectors ) {
 	m_nvecs = vectors.size();
 	m_nelems = priv_min_product_size( vectors );
 	m_rfp_ncols = ( m_nvecs  + 1 ) / 2;
@@ -78,7 +78,7 @@ GramMatrix::priv_products_prepare( ptope::VectorSet const& vectors ) {
 	m_matrix.zeros();
 }
 void
-GramMatrix::priv_products_compute( ptope::VectorSet const& vectors ) {
+GramMatrix::priv_products_compute( VectorSet<double> const& vectors ) {
 	std::size_t const total_dim = vectors.dimension();
 	std::size_t const real_dim = total_dim - 1;
 	double const * vector_ptr = vectors.memptr();

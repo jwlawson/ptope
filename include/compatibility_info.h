@@ -43,7 +43,7 @@ public:
 	 * Compute which vectors in the provided VectorSet are compatible with each
 	 * other.
 	 */
-	void from( VectorSet const& vectors );
+	void from( VectorSet<double> const& vectors );
 	/**
 	 * Check if the two vectors at the specified indices in the vector set are
 	 * compatible.

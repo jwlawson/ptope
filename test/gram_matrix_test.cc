@@ -19,7 +19,7 @@
 
 namespace ptope {
 TEST(GramMatrix, TwoEuclVectors) {
-	VectorSet set(3, 2);
+	VectorSet<double> set(3, 2);
 	set.add( { 1, 0, 0 } );
 	set.add( { 1, 1, 0 } );
 	GramMatrix gram;
@@ -50,7 +50,7 @@ TEST(GramMatrix, TwoEuclVectors) {
 	EXPECT_DOUBLE_EQ( 1, third.val );
 }
 TEST(GramMatrix, TwoHypVectors) {
-	VectorSet set(3, 2);
+	VectorSet<double> set(3, 2);
 	set.add( { 1, 0, 1 } );
 	set.add( { 0, 1, 2 } );
 	GramMatrix gram;
@@ -66,7 +66,7 @@ TEST(GramMatrix, TwoHypVectors) {
 	EXPECT_DOUBLE_EQ( -3, bb );
 }
 TEST(GramMatrix, Four3dVectors) {
-	VectorSet set( 3, 4 );
+	VectorSet<double> set( 3, 4 );
 	set.add( { 2, 0, 0 } );
 	set.add( { 0, 3, 0 } );
 	set.add( { 1, 1, 1 } );
@@ -105,7 +105,7 @@ TEST(GramMatrix, Four3dVectors) {
 	EXPECT_DOUBLE_EQ( 1, gram.at( 3, 2 ) );
 }
 TEST(GramMatrix, Three3dVectors) {
-	VectorSet set( 3, 3 );
+	VectorSet<double> set( 3, 3 );
 	set.add( { 2, 0, 1 } );
 	set.add( { 0, 3, 0 } );
 	set.add( { 2, 1, 2 } );
@@ -125,7 +125,7 @@ TEST(GramMatrix, Three3dVectors) {
 	EXPECT_DOUBLE_EQ( 3, gram.at( 2, 1 ) );
 }
 TEST(GramMatrix, CheckDiagonalFiveVectors) {
-	VectorSet set(3);
+	VectorSet<double> set(3);
 	set.add( { 1, 0, 0 } );
 	set.add( { 0, 2, 0 } );
 	set.add( { 0, 0, 3 } );
@@ -142,7 +142,7 @@ TEST(GramMatrix, CheckDiagonalFiveVectors) {
 	EXPECT_DOUBLE_EQ( 0, gram.at( 4, 4 ) );
 }
 TEST(GramMatrix, CheckDiagonalSixVectors) {
-	VectorSet set(3);
+	VectorSet<double> set(3);
 	set.add( { 1, 0, 0 } );
 	set.add( { 0, 2, 0 } );
 	set.add( { 0, 0, 3 } );
@@ -161,7 +161,7 @@ TEST(GramMatrix, CheckDiagonalSixVectors) {
 	EXPECT_DOUBLE_EQ( -27, gram.at( 5, 5 ) );
 }
 TEST(GramMatrix, RFPIndexFiveVectors) {
-	VectorSet set(3);
+	VectorSet<double> set(3);
 	set.add( { 1, 0, 0 } );
 	set.add( { 0, 2, 0 } );
 	set.add( { 0, 0, 3 } );
@@ -212,7 +212,7 @@ TEST(GramMatrix, RFPIndexFiveVectors) {
 	EXPECT_DOUBLE_EQ( gram.at( 2, 2 ), e.val );
 }
 TEST(GramMatrix, RFPIndexSixVectors) {
-	VectorSet set(3);
+	VectorSet<double> set(3);
 	set.add( { 1, 0, 0 } );
 	set.add( { 0, 2, 0 } );
 	set.add( { 0, 0, 3 } );
