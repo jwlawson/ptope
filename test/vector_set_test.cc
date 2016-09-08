@@ -56,5 +56,26 @@ TEST(VectorSet, ForceResize) {
 	EXPECT_DOUBLE_EQ( 1.3 , vec[1] );
 	EXPECT_DOUBLE_EQ( 1.4 , vec[2] );
 }
+TEST(VectorSet, CreateIterator) {
+	VectorSet<double> set( 3 );
+	arma::vec a { 1.0, 1.1, 1.2 };
+	arma::vec b { 1.1, 1.2, 1.3 };
+	arma::vec c { 1.2, 1.3, 1.4 };
+	set.add(a);
+	set.add(b);
+	set.add(c);
+
+	VectorSet<double>::iterator it = set.begin();
+	arma::vec& first = *it;
+	EXPECT_DOUBLE_EQ( a[0], first[0] );
+	EXPECT_DOUBLE_EQ( a[1], first[1] );
+	EXPECT_DOUBLE_EQ( a[2], first[2] );
+
+	++it;
+	arma::vec& second = *it;
+	EXPECT_DOUBLE_EQ( b[0], second[0] );
+	EXPECT_DOUBLE_EQ( b[1], second[1] );
+	EXPECT_DOUBLE_EQ( b[2], second[2] );
+}
 }
 
