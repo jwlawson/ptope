@@ -40,7 +40,7 @@ class VectorSet {
 		VecPtrComparator( uint32_t const size );
 		bool operator()( eT const * const lhs, eT const * const rhs ) const;
 	private:
-		uint32_t const m_size;
+		uint32_t m_size;
 	};
 
 	template<class T>
@@ -52,8 +52,11 @@ public:
 	typedef arma::uword index_t;
 	typedef vector_iterator<vec_t> iterator;
 	typedef vector_iterator<vec_t const> const_iterator;
+	typedef boost::fast_pool_allocator<elem_t const*,
+		boost::default_user_allocator_new_delete,
+		boost::details::pool::null_mutex> pointer_allocator;
 	typedef std::set<elem_t const *, VecPtrComparator,
-					boost::fast_pool_allocator<elem_t const *>> PointerSet;
+		pointer_allocator> PointerSet;
 
 	VectorSet( uint32_t const dimension, arma::uword initial_cap = 10 );
 
@@ -109,7 +112,7 @@ public:
 	const_iterator end() const;
 
 private:
-	uint32_t const m_dimension;
+	uint32_t m_dimension;
 	PointerSet m_ordered_pointers;
 	arma::Mat<elem_t> m_vector_store;
 	elem_t * m_current_data_ptr;

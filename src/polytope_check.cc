@@ -17,14 +17,11 @@
 #include "polytope_check.h"
 
 namespace ptope {
-namespace {
-arma::mat __elliptic_check_tmp;
-arma::uvec __indices_cached;
-arma::mat __vertex_submat;
-arma::uvec __extra_vertex(1);
-}
 PolytopeCheck::PolytopeCheck()
-	: _last_edge(0, arma::uvec()) {}
+	: _visited_vertices( 0, 0 )
+	, _edge_queue{}
+	, m_dimension{ 0 }
+{}
 /*
  * The Gram matrix of a polytope contains all the information to determine
  * whether or not it is compact - which is really what this method is checking.
@@ -55,85 +52,80 @@ PolytopeCheck::PolytopeCheck()
  * contain one vertex so the matrix is not a polytope.
  */
 bool
-PolytopeCheck::operator()(const PolytopeCandidate & p) {
-	_last_polytope = &p;
-
-	const arma::uvec init_v = initial_vertex(p);
-	for(arma::uword i = 0, max = init_v.size(); i < max; ++i) {
-		_edge_queue.emplace(init_v(i), construct_edge(init_v, i));
-	}
-	_visited_vertices.emplace(std::move(init_v));
-	bool result = true;
-	while(result && !_edge_queue.empty()) {
-		_last_edge = std::move(_edge_queue.front());
-		_edge_queue.pop();
-		if(!handle_edge(_last_edge, p) ) result = false;
-	}
-	/* _last_edge uses memory obtained from the pool. We are about to purge the
-	 * pool, so need to reconstruct _last_edge in different memory. */
-	Edge tmp(_last_edge);
-	_last_edge = std::move(tmp);
+PolytopeCheck::operator()(PolytopeCandidate const& p) {
 	_visited_vertices.clear();
 	while(!_edge_queue.empty()) _edge_queue.pop();
-	boost::singleton_pool<boost::fast_pool_allocator_tag, sizeof(Edge)>::purge_memory();
-	boost::singleton_pool<boost::fast_pool_allocator_tag, sizeof(arma::uvec)>::purge_memory();
+	if( m_dimension != p.real_dimension() ) {
+		m_dimension = p.real_dimension();
+		_visited_vertices = VectorSet<vector_elem_t>( m_dimension );
+	}
+
+	{// Does the set up for the initial vertex
+		vector_t const init_v = initial_vertex(p);
+		_visited_vertices.add(init_v);
+		for(vector_index_t i = 0, max = init_v.size(); i < max; ++i) {
+			_edge_queue.push( { 0, i } );
+		}
+	}
+	arma::mat const& gram = p.gram();
+	bool result = true;
+	while(result && !_edge_queue.empty()) {
+		Edge edge = _edge_queue.front();
+		_edge_queue.pop();
+		vector_elem_t const next_vert_ind = find_edge_end(edge, gram);
+		if(next_vert_ind == no_vertex) {
+			result =  false;
+		} else {
+			vector_t const new_vert = get_vertex_from_edge(edge, next_vert_ind);
+			if(_visited_vertices.add(new_vert)) {
+				vertex_index_t inserted_index = _visited_vertices.size() - 1;
+				add_edges_from_vertex(new_vert, inserted_index, next_vert_ind);
+			}
+		}
+	}
 	return result;
 }
-bool
-PolytopeCheck::resume(const PolytopeCandidate & p) {
-	_last_polytope = &p;
+PolytopeCheck::vector_elem_t
+PolytopeCheck::find_edge_end(const Edge & edge, arma::mat const& gram) const {
+	static arma::mat s_vertex_submat;
+	static arma::uvec s_indices;
+	static arma::uvec s_extra_vertex(1);
+	static arma::uvec s_first_vertex;
 
-	if(!handle_edge(_last_edge, p) ) return false;
+	arma::uword const edge_size = m_dimension - 1;
+	arma::uword const vertex_size = m_dimension;
 
-	while(!_edge_queue.empty()) {
-		_last_edge = std::move(_edge_queue.front());
-		_edge_queue.pop();
-		if(!handle_edge(_last_edge, p) ) return false;
+	s_indices.set_size(vertex_size);
+	s_first_vertex.set_size(vertex_size);
+	s_vertex_submat.set_size(vertex_size, vertex_size);
+
+	{
+		auto const& vertex = priv_const_vertex_at( edge.vertex );
+		arma::arrayops::convert( s_first_vertex.memptr(), vertex.memptr(),
+				vertex_size );
 	}
-	return false;
-}
-const arma::subview_elem2<double, arma::Mat<unsigned long long>,
-			arma::Mat<unsigned long long> >
-PolytopeCheck::last_edge() const {
-	return _last_polytope->gram().submat(_last_edge.edge, _last_edge.edge);
-}
-bool
-PolytopeCheck::handle_edge(const Edge & e, const PolytopeCandidate & p) {
-	const arma::uword next_vert_ind = find_edge_end(e, p);
-	if(next_vert_ind == no_vertex) {
-		return false;
-	}
-	const arma::uvec new_vert = get_vertex_from_edge(e, next_vert_ind);
-	if(vertex_unvisited(new_vert)) {
-		add_edges_from_vertex(new_vert, next_vert_ind);
-		_visited_vertices.emplace(std::move(new_vert));
-	}
-	return true;
-}
-arma::uword
-PolytopeCheck::find_edge_end(const Edge & edge,
-		const PolytopeCandidate & p) const {
-	const arma::mat & gram = p.gram();
-	const arma::uword & last_entry = edge.edge.size();
-	const arma::uword & size = last_entry + 1;
-	__indices_cached.set_size(size);
-	__vertex_submat.set_size(size, size);
-	for(arma::uword k = 0; k < last_entry; ++k) {
-		__indices_cached(k) = edge.edge(k);
-	}
-	__vertex_submat.submat(0, 0, last_entry - 1, last_entry - 1) =
-		gram.submat(__indices_cached.head(last_entry),
-				__indices_cached.head(last_entry));
-	for(arma::uword i = 0, max = gram.n_cols; i < max; ++i) {
-		if(i == edge.vertex_ind) continue;
-		if(std::find(edge.edge.begin(), edge.edge.end(), i) == edge.edge.end()) {
-			__extra_vertex(0) = i;
-			__indices_cached(last_entry) = i;
-			__vertex_submat.col(last_entry) = gram.submat(__indices_cached, __extra_vertex);
-			__vertex_submat.row(last_entry) = gram.submat(__extra_vertex, __indices_cached);
-			if(is_elliptic(__vertex_submat)) {
-				return i;
-			}
+	arma::arrayops::copy( s_indices.memptr(), s_first_vertex.memptr(),
+			edge.removed );
+	arma::arrayops::copy( s_indices.memptr() + edge.removed,
+			s_first_vertex.memptr() + edge.removed + 1, edge_size - edge.removed );
+
+	arma::uword const last_entry = edge_size;
+
+	s_vertex_submat.submat(0, 0, last_entry - 1, last_entry - 1) =
+		gram.submat(s_indices.head(last_entry), s_indices.head(last_entry));
+
+	vector_elem_t const removed_value = s_first_vertex( edge.removed );
+
+	for(vector_elem_t i = 0, max = gram.n_cols; i < max; ++i) {
+		if(i == removed_value) { continue; }
+		// Each edge is sorted, so a binary search is better than std::find
+		if( !std::binary_search(s_indices.begin(), s_indices.end() - 1, i) ) {
+			s_extra_vertex(0) = i;
+			s_indices(last_entry) = i;
+			s_vertex_submat.col(last_entry) = gram.submat(s_indices, s_extra_vertex);
+			s_vertex_submat.row(last_entry) = gram.submat(s_extra_vertex, s_indices);
+
+			if(is_elliptic(s_vertex_submat)) { return i; }
 		}
 	}
 	return no_vertex;
@@ -143,12 +135,14 @@ PolytopeCheck::find_edge_end(const Edge & edge,
  * a good choice. The vectors corresponding to this matrix all have zeros in the
  * final coordinate, while any other vectors cannot. Hence this comes down to a
  * search for the vectors which have this zero. */
-arma::uvec
+PolytopeCheck::vector_t
 PolytopeCheck::initial_vertex(const PolytopeCandidate & p) const {
 	const VectorFamily & vf = p.vector_family();
-	const arma::uword & last_val = p.real_dimension();
-	arma::uvec result(last_val);
-	arma::uword result_ind = 0;
+	const vector_index_t & last_val = p.real_dimension();
+
+	vector_t result(last_val);
+
+	vector_index_t result_ind = 0;
 	for(arma::uword i = 0, max = vf.size();
 			result_ind < last_val && i < max;
 			++i) {
@@ -160,62 +154,34 @@ PolytopeCheck::initial_vertex(const PolytopeCandidate & p) const {
 	}
 	return result;
 }
-arma::uvec
-PolytopeCheck::construct_edge(const arma::uvec & vertex,
-		const arma::uword & ind) const {
-	arma::uword length = vertex.size() - 1;
-	arma::uvec result(length);
-	for(arma::uword i = 0, j = 0; i < length; ++i, ++j) {
-		if(j == ind) {
-			--i;
-			continue;
-		}
-		result(i) = vertex(j);
-	}
-	return result;
-}
 void
-PolytopeCheck::add_edges_from_vertex(const arma::uvec & vertex,
-		const arma::uword & exclude) {
-	for(arma::uword i = 0, max = vertex.size(); i < max; ++i) {
+PolytopeCheck::add_edges_from_vertex( vector_t const& vertex,
+		vertex_index_t const vertex_ind, vector_elem_t const exclude) {
+	for(vector_index_t i = 0, max = m_dimension; i < max; ++i) {
 		if(vertex(i) == exclude) continue;
-		_edge_queue.emplace(vertex(i), construct_edge(vertex, i));
+		_edge_queue.push( { vertex_ind, i } );
 	}
 }
-arma::uvec
-PolytopeCheck::get_vertex_from_edge(const Edge & cur_edge,
-		const arma::uword & vertex_index) const {
-	arma::uvec new_vert(cur_edge.edge.size() + 1);
-	const arma::uword & last_entry = cur_edge.edge.size();
-	for(arma::uword i = 0; i < last_entry; ++i) {
-		new_vert(i) = cur_edge.edge(i);
-	}
-	new_vert(last_entry) = vertex_index;
-	std::sort(new_vert.begin(), new_vert.end());
+PolytopeCheck::vector_t
+PolytopeCheck::get_vertex_from_edge(Edge const& edge,
+		vector_elem_t const vertex_index) const {
+	vector_index_t const vertex_size = m_dimension;
+	vector_index_t const edge_size = m_dimension - 1;
+	vector_t const old_vert = priv_const_vertex_at( edge.vertex );
+
+	vector_t new_vert( vertex_size );
+
+	// Copy the old vertex into the new one, missing out the removed entry.
+	new_vert.head( edge.removed ) = old_vert.head( edge.removed );
+	new_vert.subvec( edge.removed, edge_size - 1 ) = old_vert.subvec( edge.removed + 1, edge_size );
+	new_vert(edge_size) = vertex_index;
+
+	// Use rotate to move the inserted last value into the right/sorted position.
+	// upper_bound gives the place to insert the value.
+	auto last_edge_entry = new_vert.end() - 1;
+	auto insert_place = std::upper_bound( new_vert.begin(), last_edge_entry, vertex_index );
+	std::rotate( insert_place , last_edge_entry, new_vert.end() );
 	return new_vert;
-}
-bool
-PolytopeCheck::vertex_unvisited(const arma::uvec & vertex) const {
-	return _visited_vertices.find(vertex) == _visited_vertices.end();
-}
-/*
- * A matrix is positive definite iff all its eigen values are positive. However
- * finding the eigenvalues of a matrix is computationally hard. Equivalently
- * there are two other definitions which help:
- *
- *  -Sylvesters criterion: A matrix is positive definite iff all determinants of
- *    leading minors are positive. This could be checked with Gaussian
- *    elimination to get the matrix in upper triangular form (using BLAS/LAPACK
- *    LU decomposition) so the determinants can be read off the diagonal entries.
- *
- *  -Cholesky decomp: A matrix is positive definite iff it has a Cholesky
- *  	decomposition. This can easily be checked by trying to compute a Cholesky
- *  	decomp (using BLAS/LAPACK) and seeing if it successful.
- */
-bool
-PolytopeCheck::is_elliptic(const arma::mat & mat) const {
-	bool success = has_chol(mat);
-	return success;
 }
 /* Simplifies what arma::chol computes. The upper triangle of
  * __elliptic_check_tmp will contain the actual cholesky decomp of mat. The
@@ -224,11 +190,12 @@ PolytopeCheck::is_elliptic(const arma::mat & mat) const {
  * computed. */
 bool
 PolytopeCheck::has_chol(const arma::mat & mat) const {
-	__elliptic_check_tmp = mat;
-	char uplo = 'U';
-	arma::blas_int n = __elliptic_check_tmp.n_rows;
+	static arma::mat s_elliptic_check_tmp;
+	s_elliptic_check_tmp = mat;
+	static char uplo = 'U';
 	arma::blas_int info = 0;
-	arma::lapack::potrf(&uplo, &n, __elliptic_check_tmp.memptr(), &n, &info);
+	arma::blas_int n = s_elliptic_check_tmp.n_rows;
+	arma::lapack::potrf(&uplo, &n, s_elliptic_check_tmp.memptr(), &n, &info);
 	return (info == 0);
 }
 }
