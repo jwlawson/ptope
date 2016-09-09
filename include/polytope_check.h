@@ -52,6 +52,7 @@ private:
 	struct Edge {
 		vertex_index_t vertex;
 		vector_index_t removed;
+		Edge( vertex_index_t v, vector_index_t r ) : vertex(v), removed(r) {}
 	};
 
 

@@ -64,7 +64,7 @@ PolytopeCheck::operator()(PolytopeCandidate const& p) {
 		vector_t const init_v = initial_vertex(p);
 		_visited_vertices.add(init_v);
 		for(vector_index_t i = 0, max = init_v.size(); i < max; ++i) {
-			_edge_queue.push( { 0, i } );
+			_edge_queue.emplace( 0, i );
 		}
 	}
 	arma::mat const& gram = p.gram();
@@ -159,7 +159,7 @@ PolytopeCheck::add_edges_from_vertex( vector_t const& vertex,
 		vertex_index_t const vertex_ind, vector_elem_t const exclude) {
 	for(vector_index_t i = 0, max = m_dimension; i < max; ++i) {
 		if(vertex(i) == exclude) continue;
-		_edge_queue.push( { vertex_ind, i } );
+		_edge_queue.emplace( vertex_ind, i );
 	}
 }
 PolytopeCheck::vector_t
