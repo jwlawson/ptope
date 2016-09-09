@@ -99,21 +99,21 @@ PolytopeCheck::find_edge_end(const Edge & edge, arma::mat const& gram) const {
 	s_first_vertex.set_size(vertex_size);
 	s_vertex_submat.set_size(vertex_size, vertex_size);
 
-	{
-		auto const& vertex = priv_const_vertex_at( edge.vertex );
-		arma::arrayops::convert( s_first_vertex.memptr(), vertex.memptr(),
-				vertex_size );
-	}
+	vector_elem_t const * vertex_ptr = _visited_vertices.ptr_at( edge.vertex );
+	arma::arrayops::convert( s_first_vertex.memptr(), vertex_ptr, vertex_size );
 	arma::arrayops::copy( s_indices.memptr(), s_first_vertex.memptr(),
 			edge.removed );
 	arma::arrayops::copy( s_indices.memptr() + edge.removed,
 			s_first_vertex.memptr() + edge.removed + 1, edge_size - edge.removed );
 
+	// Construct the vertex submatrix, which later we will check to see if it is
+	// elliptic. As the elliptic check knows the matrix is symmetric, it only ever
+	// references the upper triangle of the matrix. Only setting this saves a
+	// bunch of memory copies.
+	priv_copy_upper_triangle_submat( s_vertex_submat.memptr(), gram.memptr(),
+			s_indices, edge_size, vertex_size, gram.n_rows );
+
 	arma::uword const last_entry = edge_size;
-
-	s_vertex_submat.submat(0, 0, last_entry - 1, last_entry - 1) =
-		gram.submat(s_indices.head(last_entry), s_indices.head(last_entry));
-
 	vector_elem_t const removed_value = s_first_vertex( edge.removed );
 
 	for(vector_elem_t i = 0, max = gram.n_cols; i < max; ++i) {
@@ -122,8 +122,8 @@ PolytopeCheck::find_edge_end(const Edge & edge, arma::mat const& gram) const {
 		if( !std::binary_search(s_indices.begin(), s_indices.end() - 1, i) ) {
 			s_extra_vertex(0) = i;
 			s_indices(last_entry) = i;
-			s_vertex_submat.col(last_entry) = gram.submat(s_indices, s_extra_vertex);
-			s_vertex_submat.row(last_entry) = gram.submat(s_extra_vertex, s_indices);
+			priv_copy_submat_col( s_vertex_submat.colptr( last_entry ),
+					gram.colptr( i ), s_indices, vertex_size );
 
 			if(is_elliptic(s_vertex_submat)) { return i; }
 		}
@@ -167,13 +167,14 @@ PolytopeCheck::get_vertex_from_edge(Edge const& edge,
 		vector_elem_t const vertex_index) const {
 	vector_index_t const vertex_size = m_dimension;
 	vector_index_t const edge_size = m_dimension - 1;
-	vector_t const old_vert = priv_const_vertex_at( edge.vertex );
 
 	vector_t new_vert( vertex_size );
 
 	// Copy the old vertex into the new one, missing out the removed entry.
-	new_vert.head( edge.removed ) = old_vert.head( edge.removed );
-	new_vert.subvec( edge.removed, edge_size - 1 ) = old_vert.subvec( edge.removed + 1, edge_size );
+	vector_elem_t const * old_vert_ptr = _visited_vertices.ptr_at( edge.vertex );
+	arma::arrayops::copy( new_vert.memptr(), old_vert_ptr, edge.removed );
+	arma::arrayops::copy( new_vert.memptr() + edge.removed,
+			old_vert_ptr + edge.removed + 1, edge_size - edge.removed );
 	new_vert(edge_size) = vertex_index;
 
 	// Use rotate to move the inserted last value into the right/sorted position.
@@ -197,6 +198,23 @@ PolytopeCheck::has_chol(const arma::mat & mat) const {
 	arma::blas_int n = s_elliptic_check_tmp.n_rows;
 	arma::lapack::potrf(&uplo, &n, s_elliptic_check_tmp.memptr(), &n, &info);
 	return (info == 0);
+}
+// It might help to unroll this loop, but I'm not sure.
+void
+PolytopeCheck::priv_copy_submat_col( double * col_ptr, double const * source_ptr,
+			arma::uvec const& indices, vector_index_t num ) const {
+	for( vector_index_t col_ind = 0; col_ind < num; ++col_ind ) {
+		col_ptr[col_ind] = source_ptr[ indices(col_ind) ];
+	}
+}
+void
+PolytopeCheck::priv_copy_upper_triangle_submat( double * dest,
+		double const * source, arma::uvec const& indices, vector_index_t num_cols,
+		vector_index_t lddest, vector_index_t ldsource ) const {
+	for( vector_index_t col = 0; col < num_cols; ++col, dest += lddest ) {
+		double const * next_source_col = source + indices( col ) * ldsource;
+		priv_copy_submat_col( dest, next_source_col, indices, col + 1 );
+	}
 }
 }
 

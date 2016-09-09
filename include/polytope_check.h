@@ -101,14 +101,19 @@ private:
 	 */
 	bool has_chol(arma::mat const& mat) const;
 	/**
-	 * Get the vertex at the specified index.
-	 *
-	 * The VectorSet does not have a const at(index) method, as it cannot
-	 * guarantee that the provided vector will not be altered.
-	 *
-	 * !Any use of the returned vector should be const!
+	 * Copy the first num elements indexed by the indices vector from source_ptr
+	 * to col_ptr.
 	 */
-	vector_t priv_const_vertex_at( vertex_index_t const index ) const;
+	void priv_copy_submat_col( double * col_ptr, double const * source_ptr,
+			arma::uvec const& indices, vector_index_t num ) const;
+	/**
+	 * Copy a submatrix from source to dest, only copying the elements indexed by
+	 * the indices vector. Only the upper tirangular part of dest is written, but
+	 * the matrix it points to is assumed to be a full (lddest x num_cols) matrix.
+	 */
+	void priv_copy_upper_triangle_submat( double * dest, double const * source,
+			arma::uvec const& indices, vector_index_t num_cols, vector_index_t lddest,
+			vector_index_t ldsource) const;
 };
 /*
  * A matrix is positive definite iff all its eigen values are positive. However
@@ -129,13 +134,6 @@ bool
 PolytopeCheck::is_elliptic(arma::mat const& mat) const {
 	bool success = has_chol(mat);
 	return success;
-}
-inline
-typename PolytopeCheck::vector_t
-PolytopeCheck::priv_const_vertex_at( vertex_index_t const index ) const {
-	vector_elem_t const * cvptr = _visited_vertices.ptr_at( index );
-	vector_elem_t * ptr = const_cast<vector_elem_t *>( cvptr );
-	return vector_t( ptr, m_dimension, false, true );
 }
 }
 #endif
