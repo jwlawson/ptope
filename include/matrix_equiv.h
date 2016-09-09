@@ -20,6 +20,7 @@
 
 #include <armadillo>
 #include <memory>
+#include <vector>
 
 #include "comparator.h"
 
@@ -31,6 +32,8 @@ struct MEquivHash {
 	operator()(const std::shared_ptr<const arma::mat> & p) const {
 		return operator()(*p);
 	}
+private:
+	mutable std::vector<std::pair<std::size_t, std::size_t>> m_sums;
 };
 struct MEquivEqual {
 	/**

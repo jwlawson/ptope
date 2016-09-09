@@ -23,16 +23,16 @@ std::size_t
 MEquivHash::operator()(const arma::mat & m) const {
 	static auto rnd = [](double const& val)->std::size_t{return std::lround(val * 1e5);};
 	std::size_t hash = 113;
-	std::vector<std::pair<std::size_t, std::size_t>> sums(m.n_rows);
+	m_sums.resize(m.n_rows);
 	for(arma::uword i = 0, max = m.n_cols; i < max; ++i) {
-		sums[i].first = rnd(std::accumulate(m.begin_col(i), m.end_col(i),
+		m_sums[i].first = rnd(std::accumulate(m.begin_col(i), m.end_col(i),
 				static_cast<double>(0)));
-		sums[i].second = rnd(std::accumulate(m.begin_col(i), m.end_col(i),
+		m_sums[i].second = rnd(std::accumulate(m.begin_col(i), m.end_col(i),
 				static_cast<double>(0),
 				[](double const& init, double const& val){return init + (val * val);}));
 	}
-	std::sort(sums.begin(), sums.end());
-	boost::hash_combine(hash, sums);
+	std::sort(m_sums.begin(), m_sums.end());
+	boost::hash_combine(hash, m_sums);
 	return hash;
 }
 bool
