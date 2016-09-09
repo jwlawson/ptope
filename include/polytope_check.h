@@ -90,9 +90,13 @@ private:
 	/**
 	 * Construct the vector representing the vertex which lies at the end of the
 	 * specified edge with the given additional index.
+	 *
+	 * The vector is constructed in the provided output vector. Ensure that the
+	 * vector passed in has at least m_dimension elements. No size checking is
+	 * done.
 	 */
-	vector_t get_vertex_from_edge(Edge const& cur_edge,
-			vector_elem_t const vertex_index) const;
+	void priv_vertex_from_edge(Edge const& cur_edge,
+			vector_elem_t const vertex_index, vector_t& output) const;
 	/**
 	 * Check whether the given matrix is elliptic (i.e. positive definite).
 	 */

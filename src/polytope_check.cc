@@ -60,13 +60,14 @@ PolytopeCheck::operator()(PolytopeCandidate const& p) {
 		_visited_vertices = VectorSet<vector_elem_t>( m_dimension );
 	}
 
-	{// Does the set up for the initial vertex
-		vector_t const init_v = initial_vertex(p);
-		_visited_vertices.add(init_v);
-		for(vector_index_t i = 0, max = init_v.size(); i < max; ++i) {
-			_edge_queue.emplace( 0, i );
-		}
+	// Keep a single vertex vector to use throughout the check, rather than
+	// allocating a new one each time we create a vertex.
+	vector_t vertex = initial_vertex(p);
+	_visited_vertices.add(vertex);
+	for(vector_index_t i = 0, max = vertex.size(); i < max; ++i) {
+		_edge_queue.emplace( 0, i );
 	}
+
 	arma::mat const& gram = p.gram();
 	bool result = true;
 	while(result && !_edge_queue.empty()) {
@@ -76,10 +77,10 @@ PolytopeCheck::operator()(PolytopeCandidate const& p) {
 		if(next_vert_ind == no_vertex) {
 			result =  false;
 		} else {
-			vector_t const new_vert = get_vertex_from_edge(edge, next_vert_ind);
-			if(_visited_vertices.add(new_vert)) {
+			priv_vertex_from_edge(edge, next_vert_ind, vertex);
+			if(_visited_vertices.add(vertex)) {
 				vertex_index_t inserted_index = _visited_vertices.size() - 1;
-				add_edges_from_vertex(new_vert, inserted_index, next_vert_ind);
+				add_edges_from_vertex(vertex, inserted_index, next_vert_ind);
 			}
 		}
 	}
@@ -162,27 +163,23 @@ PolytopeCheck::add_edges_from_vertex( vector_t const& vertex,
 		_edge_queue.emplace( vertex_ind, i );
 	}
 }
-PolytopeCheck::vector_t
-PolytopeCheck::get_vertex_from_edge(Edge const& edge,
-		vector_elem_t const vertex_index) const {
-	vector_index_t const vertex_size = m_dimension;
+void
+PolytopeCheck::priv_vertex_from_edge(Edge const& edge,
+			vector_elem_t const vertex_index, vector_t& output) const {
 	vector_index_t const edge_size = m_dimension - 1;
-
-	vector_t new_vert( vertex_size );
 
 	// Copy the old vertex into the new one, missing out the removed entry.
 	vector_elem_t const * old_vert_ptr = _visited_vertices.ptr_at( edge.vertex );
-	arma::arrayops::copy( new_vert.memptr(), old_vert_ptr, edge.removed );
-	arma::arrayops::copy( new_vert.memptr() + edge.removed,
+	arma::arrayops::copy( output.memptr(), old_vert_ptr, edge.removed );
+	arma::arrayops::copy( output.memptr() + edge.removed,
 			old_vert_ptr + edge.removed + 1, edge_size - edge.removed );
-	new_vert(edge_size) = vertex_index;
+	output(edge_size) = vertex_index;
 
 	// Use rotate to move the inserted last value into the right/sorted position.
 	// upper_bound gives the place to insert the value.
-	auto last_edge_entry = new_vert.end() - 1;
-	auto insert_place = std::upper_bound( new_vert.begin(), last_edge_entry, vertex_index );
-	std::rotate( insert_place , last_edge_entry, new_vert.end() );
-	return new_vert;
+	auto last_edge_entry = output.end() - 1;
+	auto insert_place = std::upper_bound( output.begin(), last_edge_entry, vertex_index );
+	std::rotate( insert_place , last_edge_entry, output.end() );
 }
 /* Simplifies what arma::chol computes. The upper triangle of
  * __elliptic_check_tmp will contain the actual cholesky decomp of mat. The
