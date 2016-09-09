@@ -19,6 +19,7 @@
 namespace ptope {
 PolytopeCheck::PolytopeCheck()
 	: _visited_vertices( 0, 0 )
+	, _not_elliptic( 0, 0 )
 	, _edge_queue{}
 	, m_dimension{ 0 }
 {}
@@ -53,18 +54,20 @@ PolytopeCheck::PolytopeCheck()
  */
 bool
 PolytopeCheck::operator()(PolytopeCandidate const& p) {
+	static vector_t s_vertex;
+
+	_not_elliptic.clear();
 	_visited_vertices.clear();
 	while(!_edge_queue.empty()) _edge_queue.pop();
 	if( m_dimension != p.real_dimension() ) {
 		m_dimension = p.real_dimension();
 		_visited_vertices = VectorSet<vector_elem_t>( m_dimension );
+		_not_elliptic = VectorSet<vector_elem_t>( m_dimension );
 	}
 
-	// Keep a single vertex vector to use throughout the check, rather than
-	// allocating a new one each time we create a vertex.
-	vector_t vertex = initial_vertex(p);
-	_visited_vertices.add(vertex);
-	for(vector_index_t i = 0, max = vertex.size(); i < max; ++i) {
+	initial_vertex(p, s_vertex);
+	_visited_vertices.add(s_vertex);
+	for(vector_index_t i = 0, max = s_vertex.size(); i < max; ++i) {
 		_edge_queue.emplace( 0, i );
 	}
 
@@ -73,39 +76,34 @@ PolytopeCheck::operator()(PolytopeCandidate const& p) {
 	while(result && !_edge_queue.empty()) {
 		Edge edge = _edge_queue.front();
 		_edge_queue.pop();
-		vector_elem_t const next_vert_ind = find_edge_end(edge, gram);
+		vector_elem_t const next_vert_ind = priv_edge_end(edge, gram, s_vertex);
 		if(next_vert_ind == no_vertex) {
 			result =  false;
 		} else {
-			priv_vertex_from_edge(edge, next_vert_ind, vertex);
-			if(_visited_vertices.add(vertex)) {
+			if(_visited_vertices.add(s_vertex)) {
 				vertex_index_t inserted_index = _visited_vertices.size() - 1;
-				add_edges_from_vertex(vertex, inserted_index, next_vert_ind);
+				add_edges_from_vertex(s_vertex, inserted_index, next_vert_ind);
 			}
 		}
 	}
 	return result;
 }
 PolytopeCheck::vector_elem_t
-PolytopeCheck::find_edge_end(const Edge & edge, arma::mat const& gram) const {
+PolytopeCheck::priv_edge_end( Edge const& edge, arma::mat const& gram,
+		vector_t& vertex_out ) const {
 	static arma::mat s_vertex_submat;
-	static arma::uvec s_indices;
-	static arma::uvec s_extra_vertex(1);
-	static arma::uvec s_first_vertex;
+	static vector_t s_indices;
 
 	arma::uword const edge_size = m_dimension - 1;
 	arma::uword const vertex_size = m_dimension;
 
 	s_indices.set_size(vertex_size);
-	s_first_vertex.set_size(vertex_size);
 	s_vertex_submat.set_size(vertex_size, vertex_size);
 
-	vector_elem_t const * vertex_ptr = _visited_vertices.ptr_at( edge.vertex );
-	arma::arrayops::convert( s_first_vertex.memptr(), vertex_ptr, vertex_size );
-	arma::arrayops::copy( s_indices.memptr(), s_first_vertex.memptr(),
-			edge.removed );
+	vector_elem_t const * old_vertex_ptr = _visited_vertices.ptr_at( edge.vertex );
+	arma::arrayops::copy( s_indices.memptr(), old_vertex_ptr, edge.removed );
 	arma::arrayops::copy( s_indices.memptr() + edge.removed,
-			s_first_vertex.memptr() + edge.removed + 1, edge_size - edge.removed );
+			old_vertex_ptr + edge.removed + 1, edge_size - edge.removed );
 
 	// Construct the vertex submatrix, which later we will check to see if it is
 	// elliptic. As the elliptic check knows the matrix is symmetric, it only ever
@@ -115,18 +113,26 @@ PolytopeCheck::find_edge_end(const Edge & edge, arma::mat const& gram) const {
 			s_indices, edge_size, vertex_size, gram.n_rows );
 
 	arma::uword const last_entry = edge_size;
-	vector_elem_t const removed_value = s_first_vertex( edge.removed );
+	vector_elem_t const removed_value = old_vertex_ptr[ edge.removed ];
 
+	auto edge_begin = s_indices.begin();
+	auto edge_end = s_indices.end() - 1;
 	for(vector_elem_t i = 0, max = gram.n_cols; i < max; ++i) {
 		if(i == removed_value) { continue; }
 		// Each edge is sorted, so a binary search is better than std::find
-		if( !std::binary_search(s_indices.begin(), s_indices.end() - 1, i) ) {
-			s_extra_vertex(0) = i;
-			s_indices(last_entry) = i;
+		if( !std::binary_search(edge_begin, edge_end, i) ) {
+			priv_vertex_from_edge( edge, i, vertex_out );
+			if( _visited_vertices.contains( vertex_out )) { return i; }
+			if( _not_elliptic.contains( vertex_out ) ) { continue; }
+			s_indices[last_entry] = i;
 			priv_copy_submat_col( s_vertex_submat.colptr( last_entry ),
 					gram.colptr( i ), s_indices, vertex_size );
 
-			if(is_elliptic(s_vertex_submat)) { return i; }
+			if(is_elliptic(s_vertex_submat)) {
+				return i;
+			} else {
+				_not_elliptic.add( vertex_out );
+			}
 		}
 	}
 	return no_vertex;
@@ -136,31 +142,21 @@ PolytopeCheck::find_edge_end(const Edge & edge, arma::mat const& gram) const {
  * a good choice. The vectors corresponding to this matrix all have zeros in the
  * final coordinate, while any other vectors cannot. Hence this comes down to a
  * search for the vectors which have this zero. */
-PolytopeCheck::vector_t
-PolytopeCheck::initial_vertex(const PolytopeCandidate & p) const {
-	const VectorFamily & vf = p.vector_family();
-	const vector_index_t & last_val = p.real_dimension();
-
-	vector_t result(last_val);
+void
+PolytopeCheck::initial_vertex(const PolytopeCandidate & p, vector_t& output) const {
+	VectorFamily const& vf = p.vector_family();
+	vector_index_t const last_val = p.real_dimension();
+	output.set_size( last_val );
 
 	vector_index_t result_ind = 0;
 	for(arma::uword i = 0, max = vf.size();
 			result_ind < last_val && i < max;
 			++i) {
-		auto vector = vf.unsafe_get(i);
-		if(vector(last_val) == 0) {
-			result(result_ind) = i;
+		auto vector = vf.get_ptr(i);
+		if(vector[last_val] == 0) {
+			output(result_ind) = i;
 			++result_ind;
 		}
-	}
-	return result;
-}
-void
-PolytopeCheck::add_edges_from_vertex( vector_t const& vertex,
-		vertex_index_t const vertex_ind, vector_elem_t const exclude) {
-	for(vector_index_t i = 0, max = m_dimension; i < max; ++i) {
-		if(vertex(i) == exclude) continue;
-		_edge_queue.emplace( vertex_ind, i );
 	}
 }
 void
@@ -195,23 +191,6 @@ PolytopeCheck::has_chol(const arma::mat & mat) const {
 	arma::blas_int n = s_elliptic_check_tmp.n_rows;
 	arma::lapack::potrf(&uplo, &n, s_elliptic_check_tmp.memptr(), &n, &info);
 	return (info == 0);
-}
-// It might help to unroll this loop, but I'm not sure.
-void
-PolytopeCheck::priv_copy_submat_col( double * col_ptr, double const * source_ptr,
-			arma::uvec const& indices, vector_index_t num ) const {
-	for( vector_index_t col_ind = 0; col_ind < num; ++col_ind ) {
-		col_ptr[col_ind] = source_ptr[ indices(col_ind) ];
-	}
-}
-void
-PolytopeCheck::priv_copy_upper_triangle_submat( double * dest,
-		double const * source, arma::uvec const& indices, vector_index_t num_cols,
-		vector_index_t lddest, vector_index_t ldsource ) const {
-	for( vector_index_t col = 0; col < num_cols; ++col, dest += lddest ) {
-		double const * next_source_col = source + indices( col ) * ldsource;
-		priv_copy_submat_col( dest, next_source_col, indices, col + 1 );
-	}
 }
 }
 

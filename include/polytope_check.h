@@ -45,40 +45,41 @@ private:
 	typedef std::size_t vertex_index_t;
 	typedef uint_fast16_t vector_index_t;
 
-	/** Value to return when no vertex can be found. */
-	static constexpr vector_elem_t
-	no_vertex = std::numeric_limits<vector_elem_t>::max();
-
 	struct Edge {
 		vertex_index_t vertex;
 		vector_index_t removed;
 		Edge( vertex_index_t v, vector_index_t r ) : vertex(v), removed(r) {}
 	};
 
+	static constexpr vector_elem_t no_vertex = std::numeric_limits<vector_elem_t>::max();
 
-	typedef boost::pool_allocator<Edge,
-					boost::default_user_allocator_new_delete,
-					boost::details::pool::null_mutex> EdgeAllocator;
+	typedef boost::fast_pool_allocator<Edge,
+		boost::default_user_allocator_new_delete,
+		boost::details::pool::null_mutex> EdgeAllocator;
 	typedef std::deque<Edge, EdgeAllocator> EdgeContainer;
 	typedef std::queue<Edge, EdgeContainer> EdgeQueue;
 
 	VectorSet<vector_elem_t> _visited_vertices;
+	mutable VectorSet<vector_elem_t> _not_elliptic;
 	EdgeQueue _edge_queue;
 	vector_index_t m_dimension;
 	/**
 	 * Find the vertex at the end of an edge. Each edge is constructed from an
-	 * initial vertex, so this finds the other vertex along the edge. If no vertex
-	 * is found then PolytopeCheck::no_vertex is returned.
+	 * initial vertex, so this finds the other vertex along the edge.
 	 *
-	 * The index returned is the additional vertex index needed to complete the
-	 * edge to a vertex.
+	 * Such a vertex is not guaranteed to exist. In fact if no such vertex can be
+	 * found then the provided gram matrix is not a hyperbolic polytope. In this
+	 * case the function returns false.
+	 *
+	 * If a vertex is found, then it is copied into the provided vector and true
+	 * is returned.
 	 */
-	vector_elem_t
-	find_edge_end(Edge const& edge, arma::mat const& p) const;
+	vector_elem_t priv_edge_end( Edge const& edge, arma::mat const& gram,
+			vector_t& vertex_out ) const;
 	/**
 	 * Find an initial elliptic subdiagram to use as initial vertex.
 	 */
-	vector_t initial_vertex(PolytopeCandidate const& p) const;
+	void initial_vertex(PolytopeCandidate const& p, vector_t& output) const;
 	/**
 	 * Use the provided vertes to add all edges adjacent to that vertex to the
 	 * queue, except for the edge specified by the excluded index. The excluded
@@ -110,16 +111,26 @@ private:
 	 * to col_ptr.
 	 */
 	void priv_copy_submat_col( double * col_ptr, double const * source_ptr,
-			arma::uvec const& indices, vector_index_t num ) const;
+			vector_t const& indices, vector_index_t num ) const;
 	/**
 	 * Copy a submatrix from source to dest, only copying the elements indexed by
 	 * the indices vector. Only the upper tirangular part of dest is written, but
 	 * the matrix it points to is assumed to be a full (lddest x num_cols) matrix.
 	 */
 	void priv_copy_upper_triangle_submat( double * dest, double const * source,
-			arma::uvec const& indices, vector_index_t num_cols, vector_index_t lddest,
+			vector_t const& indices, vector_index_t num_cols, vector_index_t lddest,
 			vector_index_t ldsource) const;
 };
+
+inline
+void
+PolytopeCheck::add_edges_from_vertex( vector_t const& vertex,
+		vertex_index_t const vertex_ind, vector_elem_t const exclude) {
+	for(vector_index_t i = 0, max = m_dimension; i < max; ++i) {
+		if(vertex[i] == exclude) continue;
+		_edge_queue.emplace( vertex_ind, i );
+	}
+}
 /*
  * A matrix is positive definite iff all its eigen values are positive. However
  * finding the eigenvalues of a matrix is computationally hard. Equivalently
@@ -139,6 +150,25 @@ bool
 PolytopeCheck::is_elliptic(arma::mat const& mat) const {
 	bool success = has_chol(mat);
 	return success;
+}
+// It might help to unroll this loop, but I'm not sure.
+inline
+void
+PolytopeCheck::priv_copy_submat_col( double * col_ptr, double const * source_ptr,
+			vector_t const& indices, vector_index_t num ) const {
+	for( vector_index_t col_ind = 0; col_ind < num; ++col_ind ) {
+		col_ptr[col_ind] = source_ptr[ indices(col_ind) ];
+	}
+}
+inline
+void
+PolytopeCheck::priv_copy_upper_triangle_submat( double * dest,
+		double const * source, vector_t const& indices, vector_index_t num_cols,
+		vector_index_t lddest, vector_index_t ldsource ) const {
+	for( vector_index_t col = 0; col < num_cols; ++col, dest += lddest ) {
+		double const * next_source_col = source + indices( col ) * ldsource;
+		priv_copy_submat_col( dest, next_source_col, indices, col + 1 );
+	}
 }
 }
 #endif
