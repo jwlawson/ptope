@@ -55,13 +55,11 @@ bool
 PolytopeCheck::operator()(PolytopeCandidate const& p) {
 	static vector_t s_vertex;
 
-	_not_elliptic.clear();
 	_visited_vertices.clear();
 	while(!_edge_queue.empty()) _edge_queue.pop();
 	if( m_dimension != p.real_dimension() ) {
 		m_dimension = p.real_dimension();
 		_visited_vertices = VectorSet<vector_elem_t>( m_dimension );
-		_not_elliptic = VectorSet<vector_elem_t>( m_dimension );
 	}
 
 	initial_vertex(p, s_vertex);
@@ -179,13 +177,14 @@ PolytopeCheck::priv_vertex_from_edge(Edge const& edge,
  * actually care about the cholesky result here, just whether it can be
  * computed. */
 bool
-PolytopeCheck::has_chol(const arma::mat & mat) const {
-	static arma::mat s_elliptic_check_tmp;
-	s_elliptic_check_tmp = mat;
+PolytopeCheck::priv_has_chol(arma::mat const& mat, arma::blas_int nrows,
+		arma::blas_int ldmat) const {
+	static arma::podarray<double> s_elliptic_check_tmp;
+	s_elliptic_check_tmp.set_min_size( nrows * ldmat );
+	arma::arrayops::copy( s_elliptic_check_tmp.memptr(), mat.memptr(), nrows * ldmat );
 	static char uplo = 'U';
 	arma::blas_int info = 0;
-	arma::blas_int n = s_elliptic_check_tmp.n_rows;
-	arma::lapack::potrf(&uplo, &n, s_elliptic_check_tmp.memptr(), &n, &info);
+	arma::lapack::potrf(&uplo, &nrows, s_elliptic_check_tmp.memptr(), &ldmat, &info);
 	return (info == 0);
 }
 }

@@ -53,7 +53,7 @@ private:
 
 	static constexpr vector_elem_t no_vertex = std::numeric_limits<vector_elem_t>::max();
 
-	typedef boost::fast_pool_allocator<Edge,
+	typedef boost::pool_allocator<Edge,
 		boost::default_user_allocator_new_delete,
 		boost::details::pool::null_mutex> EdgeAllocator;
 	typedef std::deque<Edge, EdgeAllocator> EdgeContainer;
@@ -104,7 +104,8 @@ private:
 	/**
 	 * Check whether the given matrix has a cholesky decomposition.
 	 */
-	bool has_chol(arma::mat const& mat) const;
+	bool priv_has_chol(arma::mat const& mat, arma::blas_int nrows,
+		arma::blas_int ldmat) const;
 	/**
 	 * Copy the first num elements indexed by the indices vector from source_ptr
 	 * to col_ptr.
@@ -126,7 +127,7 @@ void
 PolytopeCheck::add_edges_from_vertex( vector_t const& vertex,
 		vertex_index_t const vertex_ind, vector_elem_t const exclude) {
 	for(vector_index_t i = 0, max = m_dimension; i < max; ++i) {
-		if(vertex[i] == exclude) continue;
+		if(vertex[i] == exclude) { continue; }
 		_edge_queue.emplace( vertex_ind, i );
 	}
 }
@@ -147,8 +148,7 @@ PolytopeCheck::add_edges_from_vertex( vector_t const& vertex,
 inline
 bool
 PolytopeCheck::is_elliptic(arma::mat const& mat) const {
-	bool success = has_chol(mat);
-	return success;
+	return priv_has_chol(mat, mat.n_rows, mat.n_cols);
 }
 // It might help to unroll this loop, but I'm not sure.
 inline
