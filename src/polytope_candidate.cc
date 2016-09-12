@@ -265,7 +265,7 @@ PolytopeCandidate::save(std::ostream & os) const {
 	_gram.save(os, arma::file_type::arma_binary);
 	_vectors.save(os, arma::file_type::arma_binary);
 	os << _hyperbolic << " ";
-	os << _valid;
+	os << _valid << '\n';
 }
 void
 PolytopeCandidate::load(std::istream & is) {
