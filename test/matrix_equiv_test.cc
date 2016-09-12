@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include "angles.h"
 #include "calc.h"
 #include "elliptic_factory.h"
 #include "polytope_extender.h"
@@ -74,6 +75,7 @@ TEST(MatrixEqual, Polytopes) {
 	EXPECT_TRUE(e(q.gram(), r.gram()));
 }
 TEST(MatrixEqual, LargeNumber) {
+	Angles::get().set_angles( { 2, 3, 4, 5, 8, 10 } );
 	MEquivEqual e;
 	MEquivHash h;
 	PolytopeCandidate p(elliptic_factory::type_a(4));

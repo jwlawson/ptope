@@ -26,10 +26,11 @@ MEquivHash::operator()(const arma::mat & m) const {
 	m_sums.resize(m.n_rows);
 	for(arma::uword i = 0, max = m.n_cols; i < max; ++i) {
 		m_sums[i].first = rnd(std::accumulate(m.begin_col(i), m.end_col(i),
-				static_cast<double>(0)));
+				static_cast<double>(0),
+				[](double const& init, double const& val){return init + rnd(val);}));
 		m_sums[i].second = rnd(std::accumulate(m.begin_col(i), m.end_col(i),
 				static_cast<double>(0),
-				[](double const& init, double const& val){return init + (val * val);}));
+				[](double const& init, double const& val){return init + (rnd(val) * rnd(val));}));
 	}
 	std::sort(m_sums.begin(), m_sums.end());
 	boost::hash_combine(hash, m_sums);
