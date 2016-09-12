@@ -1,18 +1,25 @@
 NAME = ptope
 MAJOR = 0
-MINOR = 5
+MINOR = 6
 VERSION = $(MAJOR).$(MINOR)
 
 ifeq ($(CXX),g++)
-CXXFLAGS += -Wall -Wextra -march=native
+#One of these causes a problem with overflowing hashes
+CXXFLAGS += -Wall -Wextra -march=native\
+	-fno-signed-zeros\
+	-fno-math-errno\
+	-fno-rounding-math\
+	-fno-signaling-nans -fno-trapping-math -ffinite-math-only\
+	-Wno-misleading-indentation
 OPT += -O3 -g
+AR = gcc-ar
 else
 CXXFLAGS += -Wall -xHOST
 OPT += -O3 -ipo
-B_OPT += $(OPT)
 AR = xiar
 endif
-CXXFLAGS += -DARMA_DONT_USE_WRAPPER -DARMA_NO_DEBUG
+CXXFLAGS += -DARMA_DONT_USE_WRAPPER -DARMA_NO_DEBUG -DNDEBUG
+B_OPT += $(OPT)
 
 uname_S := $(shell sh -c 'uname -s 2>/dev/null || echo not')
 uname_M := $(shell sh -c 'uname -m 2>/dev/null || echo not')
@@ -23,7 +30,7 @@ ifeq ($(uname_O),Cygwin)
 	CXXFLAGS += -std=gnu++11 -DCYGWIN_STOI
 endif
 ifeq ($(uname_S),Linux)
-	CXXFLAGS += -std=c++11 -fPIC
+	CXXFLAGS += -std=c++11
 endif
 
 LIB = lib$(NAME).so.$(VERSION)
@@ -58,12 +65,12 @@ LFLAGS = -L$(HOME)/lib -L$(BASE_DIR)/lib
 
 # define any libraries to link into executable:
 #   if I want to link in libraries (libx.so or libx.a) use -lx
-LIBS = -lopenblas -llapack
+LIBS =
 TEST_LIBS = -lgtest -lgtest_main -lopenblas -llapack -pthread \
 						-lboost_system
 
 # define the C source files
-SRCS = $(wildcard $(SRC_DIR)/*.cc)
+SRCS = $(filter-out $(SRC_DIR)/bench.cc,$(wildcard $(SRC_DIR)/*.cc))
 TEST_SRCS = $(wildcard $(TEST_DIR)/*.cc)
 
 # define the C object files
@@ -87,6 +94,8 @@ PROF = #-fprofile-use
 
 all:	$(LIB)
 
+$(TEST): CXXFLAGS += -flto -fuse-linker-plugin
+$(TEST): OPT = -O3
 $(TEST): $(OBJS) $(TEST_OBJS)
 	$(CXX) $(PROF) $(CXXFLAGS) $(B_OPT) $(INCLUDES) -o $(TEST) $(TEST_OBJS) $(OBJS) $(LFLAGS) $(TEST_LIBS)
 
@@ -94,12 +103,21 @@ test: $(TEST)
 	@echo Running tests
 	@./$(TEST)
 
+bench: CXXFLAGS += -flto -fuse-linker-plugin
+bench: OPT = -O3
+bench: $(STATIC) src/bench.cc
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OPT) -c src/bench.cc -o build/bench.o
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OPT) build/bench.o -L. -Wl,-Bstatic -lptope -lbenchmark -Wl,-Bdynamic $(LFLAGS) -lopenblas -llapack -lboost_system -pthread -o bench
+
 lib:	$(LIB)
 static:	$(STATIC)
 
+$(LIB): CXXFLAGS += -fPIC
 $(LIB):	$(OBJS)
 	$(CXX) $(LDFLAGS) -o $@ $^
 
+$(STATIC): CXXFLAGS += -flto -fuse-linker-plugin -ffat-lto-objects
+$(STATIC): OPT = -O3
 $(STATIC): $(OBJS)
 	$(AR) rcs $(STATIC) $(OBJS)
 
