@@ -19,7 +19,6 @@
 namespace ptope {
 PolytopeCheck::PolytopeCheck()
 	: _visited_vertices( 0, 0 )
-	, _not_elliptic( 0, 0 )
 	, _edge_queue{}
 	, m_dimension{ 0 }
 {}
@@ -123,15 +122,12 @@ PolytopeCheck::priv_edge_end( Edge const& edge, arma::mat const& gram,
 		if( !std::binary_search(edge_begin, edge_end, i) ) {
 			priv_vertex_from_edge( edge, i, vertex_out );
 			if( _visited_vertices.contains( vertex_out )) { return i; }
-			if( _not_elliptic.contains( vertex_out ) ) { continue; }
 			s_indices[last_entry] = i;
 			priv_copy_submat_col( s_vertex_submat.colptr( last_entry ),
 					gram.colptr( i ), s_indices, vertex_size );
 
 			if(is_elliptic(s_vertex_submat)) {
 				return i;
-			} else {
-				_not_elliptic.add( vertex_out );
 			}
 		}
 	}

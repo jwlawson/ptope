@@ -60,7 +60,6 @@ private:
 	typedef std::queue<Edge, EdgeContainer> EdgeQueue;
 
 	VectorSet<vector_elem_t> _visited_vertices;
-	mutable VectorSet<vector_elem_t> _not_elliptic;
 	EdgeQueue _edge_queue;
 	vector_index_t m_dimension;
 	/**

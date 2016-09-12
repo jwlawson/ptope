@@ -92,6 +92,13 @@ VectorSet<eT>::VecPtrComparator::operator()( elem_t const * lhs,
 }
 
 template<class eT>
+VectorSet<eT>::VectorSet( uint32_t const dimension, arma::uword initial_cap )
+	: m_dimension { dimension }
+	, m_ordered_pointers { VecPtrComparator( dimension ) }
+	, m_vector_store ( dimension , initial_cap )
+	, m_current_data_ptr { m_vector_store.memptr() }
+{}
+template<class eT>
 inline
 void
 VectorSet<eT>::clear() {

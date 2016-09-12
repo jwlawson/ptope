@@ -87,7 +87,7 @@ public:
 	 * Complexity: Logarithmic search plus linear insertion
 	 */
 	bool add( elem_t const * vec_ptr );
-	bool add( vec_t const& vec);
+	bool add( vec_t const& vec );
 	/**
 	 * Get a (strict) vector from the set at the specified index.
 	 * This vector uses the memory in the set, so cannot be resized and should not
@@ -117,8 +117,12 @@ private:
 	arma::Mat<elem_t> m_vector_store;
 	elem_t * m_current_data_ptr;
 
+	typedef typename PointerSet::iterator set_iterator;
+
 	bool
 	priv_insert_without_resize( elem_t const * vec_ptr );
+	void
+	priv_insert_at( set_iterator& insert_hint, elem_t const * vec_ptr );
 	void
 	priv_resize_extend();
 };

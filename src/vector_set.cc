@@ -18,18 +18,10 @@
 
 namespace ptope {
 template<class eT>
-VectorSet<eT>::VectorSet( uint32_t const dimension, arma::uword initial_cap )
-	: m_dimension { dimension }
-	, m_ordered_pointers { VecPtrComparator( dimension ) }
-	, m_vector_store ( dimension , initial_cap )
-	, m_current_data_ptr { m_vector_store.memptr() }
-{}
-template<class eT>
 bool
 VectorSet<eT>::add( elem_t const * vec_ptr ) {
 	std::size_t cur_size = m_ordered_pointers.size();
 	if( cur_size == m_vector_store.n_cols ) {
-		// Need to extend vector store
 		priv_resize_extend();
 	}
 	return priv_insert_without_resize( vec_ptr );
@@ -45,13 +37,19 @@ VectorSet<eT>::priv_insert_without_resize( elem_t const * vec_ptr ) {
 	// otherwise it is not in the store
 	if(eq_pair.first == eq_pair.second) {
 		auto& insert_hint = eq_pair.first;
-		std::size_t cur_size = m_ordered_pointers.size();
-		elem_t * next_store_vec = ptr_at( cur_size );
-		std::memcpy( next_store_vec , vec_ptr , m_dimension * sizeof(elem_t) );
-		m_ordered_pointers.insert( insert_hint , next_store_vec );
+		priv_insert_at( insert_hint, vec_ptr );
 		inserted = true;
 	}
 	return inserted;
+}
+template<class eT>
+void
+VectorSet<eT>::priv_insert_at( set_iterator& insert_hint,
+		elem_t const * vec_ptr ) {
+	std::size_t cur_size = m_ordered_pointers.size();
+	elem_t * next_store_vec = ptr_at( cur_size );
+	std::memcpy( next_store_vec , vec_ptr , m_dimension * sizeof(elem_t) );
+	m_ordered_pointers.insert( insert_hint , next_store_vec );
 }
 template<class eT>
 void
