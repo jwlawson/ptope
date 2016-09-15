@@ -69,7 +69,7 @@ LQInfo::compute(arma::mat const & A) {
 	result->_nullspace = __orthog_cache.row(A_n_rows).t();
 	result->_qtli = __orthog_cache.head_rows(A_n_rows).t() * __li_cache;
 	
-	return std::move(result);
+	return result;
 }
 LQInfo::LQInfo(arma::uword const dim)
 	: _qtli(dim + 1, dim),

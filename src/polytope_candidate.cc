@@ -96,7 +96,7 @@ bool
 PolytopeCandidate::vector_from_inner_products(const arma::vec & inner_vector) const {
 	if(_hyperbolic) {
 		if(!_lq_info) {
-			_lq_info = std::move(detail::LQInfo::compute(_basis_vecs_trans));
+			_lq_info = detail::LQInfo::compute(_basis_vecs_trans);
 		}
 		__null_vec_cached = _lq_info->null();
 		__new_vec_cached = _lq_info->qtli() * inner_vector;

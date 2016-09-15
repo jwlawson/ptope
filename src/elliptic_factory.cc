@@ -34,7 +34,7 @@ arma::mat e6() {
 			{ 0, 0, -.5, 1, 0, 0 },
 			{ 0, 0, -.5, 0, 1, -.5 },
 			{ 0, 0, 0, 0, -.5, 1 } };
-	return std::move(result);
+	return result;
 }
 arma::mat e7() {
 	arma::mat result = 
@@ -45,7 +45,7 @@ arma::mat e7() {
 			{ 0, 0, -.5, 0, 1, -.5, 0 },
 			{ 0, 0, 0, 0, -.5, 1, -.5 },
 			{ 0, 0, 0, 0, 0, -.5, 1 } };
-	return std::move(result);
+	return result;
 }
 arma::mat e8() {
 	arma::mat result = 
@@ -57,7 +57,7 @@ arma::mat e8() {
 			{ 0, 0, 0, 0, -.5, 1, -.5, 0 },
 			{ 0, 0, 0, 0, 0, -.5, 1, -.5 },
 			{ 0, 0, 0, 0, 0, 0, -.5, 1 } };
-	return std::move(result);
+	return result;
 }
 arma::mat f4() {
 	arma::mat result =
@@ -65,20 +65,20 @@ arma::mat f4() {
 		{ -.5, 1, min_recip_sqrt2, 0 },
 		{ 0, min_recip_sqrt2, 1, -.5 },
 		{ 0, 0, -.5, 1 } };
-	return std::move(result);
+	return result;
 }
 arma::mat g(const double label) {
 	arma::mat result = 
 	{ { 1, -std::cos(pi/label) },
 		{-std::cos(pi/label), 1 } };
-	return std::move(result);
+	return result;
 }
 arma::mat h3() {
 	arma::mat result =
 	{ { 1, min_cos_pi_5, 0 },
 		{ min_cos_pi_5, 1, -.5 },
 		{ 0, -.5, 1 } };
-	return std::move(result);
+	return result;
 }
 arma::mat h4() {
 	arma::mat result =
@@ -86,7 +86,7 @@ arma::mat h4() {
 		{ min_cos_pi_5, 1, -.5, 0 },
 		{ 0, -.5, 1, -.5 },
 		{ 0, 0, -.5, 1 } };
-	return std::move(result);
+	return result;
 }
 }
 /*
@@ -107,7 +107,7 @@ arma::mat type_a(const uint size) {
 		result(index++) = -.5;
 	}
 	result(index) = 1;
-	return std::move(result);
+	return result;
 }
 arma::mat type_b(const uint size) {
 	arma::mat result(size, size);
@@ -129,7 +129,7 @@ arma::mat type_b(const uint size) {
 		result(index++) = -.5;
 	}
 	result(index) = 1;
-	return std::move(result);
+	return result;
 }
 arma::mat type_d(const uint size) {
 	if(size < 4) {
@@ -163,16 +163,16 @@ arma::mat type_d(const uint size) {
 		result(index++) = -.5;
 	}
 	result(index) = 1;
-	return std::move(result);
+	return result;
 }
 arma::mat type_e(const uint size) {
 	switch(size) {
 		case 6:
-			return std::move(e6());
+			return e6();
 		case 7:
-			return std::move(e7());
+			return e7();
 		case 8:
-			return std::move(e8());
+			return e8();
 		default:
 #ifdef PTOPE_DEBUG
 			std::cerr << "elliptic_factory::type_e called with size " << size
@@ -184,7 +184,7 @@ arma::mat type_e(const uint size) {
 arma::mat type_f(const uint size) {
 	switch(size) {
 		case 4:
-			return std::move(f4());
+			return f4();
 		default:
 #ifdef PTOPE_DEBUG
 			std::cerr << "elliptic_factory::type_f called with size " << size
@@ -196,7 +196,7 @@ arma::mat type_f(const uint size) {
 arma::mat type_g(const uint size, const uint label) {
 	switch(size) {
 		case 2:
-			return std::move(g(label));
+			return g(label);
 		default:
 #ifdef PTOPE_DEBUG
 			std::cerr << "elliptic_factory::type_g called with size " << size
@@ -208,9 +208,9 @@ arma::mat type_g(const uint size, const uint label) {
 arma::mat type_h(const uint size) {
 	switch(size) {
 		case 3:
-			return std::move(h3());
+			return h3();
 		case 4:
-			return std::move(h4());
+			return h4();
 		default:
 #ifdef PTOPE_DEBUG
 			std::cerr << "elliptic_factory::type_h called with size " << size
